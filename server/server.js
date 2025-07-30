@@ -13,7 +13,7 @@ app.use(helmet());
 
 // FIX: Added CORS options to allow requests from your frontend
 const corsOptions = {
-  origin: 'http://localhost:5173', // Specifies the allowed origin
+  origin: ['http://localhost:5173', 'https://skillswap-2kukz46o8-shiven-shuklas-projects.vercel.app'], // Specifies the allowed origin
   allowedHeaders: ['Content-Type', 'Authorization'],
   optionsSuccessStatus: 200 
 };
