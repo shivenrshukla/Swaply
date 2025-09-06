@@ -60,4 +60,4 @@ const UserCard = ({ user, onRequestSwap, className = '' }) => {
   )
 }
 
-export default UserCard
+export default UserCard;

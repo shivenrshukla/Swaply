@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import { useNavigation } from '../context/NavigationContext';
 
-const Login = ({ onPageChange }) => { // ✅ Accept onPageChange as prop
-  const { login } = useAuth()
+const Login = () => {
+  const { login } = useAuth();
+  const { setCurrentPage } = useNavigation();
   
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -25,7 +27,7 @@ const Login = ({ onPageChange }) => { // ✅ Accept onPageChange as prop
         localStorage.setItem('token', res.data.token) // ✅ Store token for later use
       }
       
-      onPageChange('home') // ✅ Navigate to home using prop function
+      setCurrentPage('home') // ✅ Navigate to home using navigate hook
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed.')
     }

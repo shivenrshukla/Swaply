@@ -77,8 +77,6 @@ router.patch('/users/:id/set-admin', auth, adminAuth, async (req, res) => {
   }
 });
 
-
-// --- AND ADD THIS ROUTE ---
 // Delete a user
 router.delete('/users/:id', auth, adminAuth, async (req, res) => {
   try {
@@ -87,11 +85,6 @@ router.delete('/users/:id', auth, adminAuth, async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-    
-    // Here you could also delete related data if needed
-    // await Request.deleteMany({ $or: [{ requester: user._id }, { recipient: user._id }] });
-    // await Message.deleteMany({ $or: [{ sender: user._id }, { recipient: user._id }] });
-    // await Rating.deleteMany({ $or: [{ rater: user._id }, { ratee: user._id }] });
 
     res.json({ message: 'User deleted successfully' });
   } catch (error) {
@@ -201,22 +194,32 @@ router.get('/requests', auth, adminAuth, async (req, res) => {
 // Send platform-wide message
 router.post('/broadcast', auth, adminAuth, async (req, res) => {
   try {
-    const { title, content, type } = req.body;
+    const { title, content } = req.body;
 
-    const users = await User.find({ banned: false }).select('_id');
+    if (!title || !content) {
+      return res.status(400).json({ message: 'Title and content are required' });
+    }
+
+    // const users = await User.find({ banned: false }).select('_id');
     
-    const messages = users.map(user => ({
-      sender: req.user.id,
-      recipient: user._id,
+    // const messages = users.map(user => ({
+    //   sender: req.user.id,
+    //   recipient: user._id,
+    //   title,
+    //   content,
+    //   type: type || 'announcement',
+    //   isAdminMessage: true
+    // }));
+
+    const sentCount = await Message.sendBroadcast({
+      senderId: req.user.id,
       title,
-      content,
-      type: type || 'announcement',
-      isAdminMessage: true
-    }));
+      content
+    })
 
-    await Message.insertMany(messages);
+    // await Message.insertMany(messages);
 
-    res.json({ message: `Broadcast sent to ${users.length} users` });
+    res.json({ message: `Broadcast sent to ${sentCount} users` });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -226,8 +229,8 @@ router.post('/broadcast', auth, adminAuth, async (req, res) => {
 router.get('/stats', auth, adminAuth, async (req, res) => {
   try {
     const totalUsers = await User.countDocuments();
-    const activeUsers = await User.countDocuments({ banned: false });
-    const bannedUsers = await User.countDocuments({ banned: true });
+    const activeUsers = await User.countDocuments({ isBanned: false });
+    const bannedUsers = await User.countDocuments({ isBanned: true });
     const adminUsers = await User.countDocuments({ isAdmin: true });
 
     const totalRequests = await Request.countDocuments();

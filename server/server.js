@@ -4,6 +4,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const path = require('path');
+const multer = require('multer');
 require('dotenv').config();
 
 const app = express();
@@ -11,9 +12,9 @@ const app = express();
 // Security middleware
 app.use(helmet());
 
-// FIX: Added CORS options to allow requests from your frontend
+// CORS options to allow requests from your frontend
 const corsOptions = {
-  origin: ['http://localhost:5173', 'https://skillswap-2kukz46o8-shiven-shuklas-projects.vercel.app'], // Specifies the allowed origin
+  origin: ['http://localhost:5173'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   optionsSuccessStatus: 200 
 };
@@ -22,7 +23,7 @@ app.use(cors(corsOptions));
 // Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
+  max: 100, // limit each IP to 100 requests per windowMs(15 minutes)
   message: 'Too many requests from this IP, please try again later.'
 });
 app.use('/api/', limiter);
@@ -33,6 +34,33 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Static files for uploads
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Configure multer for file storage
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'uploads/');
+  },
+  filename: function (req, file, cb) {
+    const username = req.body.username || 'anonymous'; // Get username from form body
+    const timestamp = Date.now();
+    const random = Math.round(Math.random() * 1E9);
+    const ext = path.extname(file.originalname);
+
+    const safeUsername = username.replace(/[^a-z0-9]/gi, '_').toLowerCase(); // sanitize username
+    const filename = `${file.fieldname}-${safeUsername}-${timestamp}-${random}${ext}`;
+    cb(null, filename);
+  }
+});
+
+const upload = multer({ storage: storage });
+
+app.post('/upload', upload.single('image'), (req, res) => {
+  // File is saved to disk automatically by multer
+  res.json({
+    message: 'File uploaded successfully!',
+    filePath: `/uploads/${req.file.filename}` // Use this URL in frontend
+  });
+});
 
 // MongoDB connection
 mongoose.connect(process.env.MONGO_URL, {

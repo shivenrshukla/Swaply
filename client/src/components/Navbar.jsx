@@ -11,6 +11,7 @@ const Navbar = ({ currentPage, onPageChange }) => {
       { id: 'home', label: 'Home', icon: '🏠' },
       { id: 'requests', label: 'Requests', icon: '📨' },
       { id: 'matches', label: 'Matches', icon: '🤝' },
+      { id: 'get-announcements', label: 'Announcements', icon: '📢' },
       { id: 'profile', label: 'Profile', icon: '👤' },
     ];
 

@@ -14,7 +14,7 @@ const requestSchema = new mongoose.Schema({
   skillOffered: {
     skillId: {
       type: mongoose.Schema.Types.ObjectId,
-      required: false // CORRECTED: Changed from true to false
+      required: false 
     },
     skillName: {
       type: String,
@@ -24,7 +24,7 @@ const requestSchema = new mongoose.Schema({
   skillRequested: {
     skillId: {
       type: mongoose.Schema.Types.ObjectId,
-      required: false // CORRECTED: Changed from true to false
+      required: false 
     },
     skillName: {
       type: String,

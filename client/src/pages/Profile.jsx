@@ -1,30 +1,31 @@
-import { useState, useEffect } from 'react'
-import { useAuth } from '../context/AuthContext'
-import axios from 'axios'
+import { useState, useEffect } from 'react';
+import { useAuth } from '../context/AuthContext';
+import axios from 'axios';
 
 const Profile = () => {
-  const { user, token, setUser, loading } = useAuth()
-  const [currentUser, setCurrentUser] = useState(user)
+  // only 4 variables are used in this component and not 6
+  const { user, setUser, token, loading } = useAuth();
+  const [currentUser, setCurrentUser] = useState(user);
 
   // Profile edit form state
   const [profileFormData, setProfileFormData] = useState({
     name: currentUser?.name || '',
     location: currentUser?.location || '',
     availability: currentUser?.availability || 'Available',
-    isPublic: currentUser?.isPublic ?? true
-  })
-  const [isEditingProfile, setIsEditingProfile] = useState(false)
+    isPublic: currentUser?.isPublic || true
+  });
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
 
   // Skill form state
   const [skillFormData, setSkillFormData] = useState({
     name: '',
     description: '',
     level: 'Beginner',
-  })
+  });
   
-  const [errors, setErrors] = useState({})
-  const [success, setSuccess] = useState('')
-  const [offeredSkills, setOfferedSkills] = useState(currentUser?.skillsOffered || [])
+  const [errors, setErrors] = useState({});
+  const [success, setSuccess] = useState('');
+  const [offeredSkills, setOfferedSkills] = useState(currentUser?.skillsOffered || []);
 
   // Update form data when user data changes
   useEffect(() => {
@@ -34,10 +35,10 @@ const Profile = () => {
         location: currentUser.location || '',
         availability: currentUser.availability || 'Available',
         isPublic: currentUser.isPublic ?? true
-      })
+      });
       setOfferedSkills(currentUser.skillsOffered || [])
     }
-  }, [currentUser])
+  }, [currentUser]);
 
   if (loading) {
     return (
@@ -52,7 +53,7 @@ const Profile = () => {
       <div className="flex items-center justify-center h-screen bg-gradient-to-br from-gray-800 via-blue-gray-900 to-gray-900 text-gray-200">
         <p className="text-lg animate-pulse">You must be logged in to view this page.</p>
       </div>
-    )
+    );
   }
 
   const handleProfileChange = (e) => {
@@ -75,30 +76,30 @@ const Profile = () => {
         'http://localhost:8001/api/users/profile',
         profileFormData,
         { headers: { Authorization: `Bearer ${token}` } }
-      )
+      );
 
-      setSuccess('Profile updated successfully!')
+      setSuccess('Profile updated successfully!');
       
       // Update both local state and context
-      const updatedUser = res.data.user
-      setCurrentUser(updatedUser)
+      const updatedUser = res.data.user;
+      setCurrentUser(updatedUser);
       
       if (setUser) {
         setUser(updatedUser)
       }
       
       // Always exit edit mode
-      setIsEditingProfile(false)
+      setIsEditingProfile(false);
       
       // Clear any previous errors
-      setErrors({})
+      setErrors({});
       
     } catch (err) {
-      const msg = err.response?.data?.errors || err.response?.data?.message
+      const msg = err.response?.data?.errors || err.response?.data?.message;
       setErrors(typeof msg === 'string' ? { global: msg } : msg.reduce((acc, cur) => {
         acc[cur.param] = cur.msg
         return acc
-      }, {}))
+      }, {}));
     }
   }
 
@@ -115,27 +116,27 @@ const Profile = () => {
       setOfferedSkills(prev => [...prev, {
         ...skillFormData,
         approved: false,
-      }])
-      setSkillFormData({ name: '', description: '', level: 'Beginner' })
+      }]);
+      setSkillFormData({ name: '', description: '', level: 'Beginner' });
     } catch (err) {
       const msg = err.response?.data?.errors || err.response?.data?.message
       setErrors(typeof msg === 'string' ? { global: msg } : msg.reduce((acc, cur) => {
         acc[cur.param] = cur.msg
         return acc
-      }, {}))
+      }, {}));
     }
   }
 
   const cancelEdit = () => {
-    setIsEditingProfile(false)
+    setIsEditingProfile(false);
     setProfileFormData({
       name: currentUser?.name || '',
       location: currentUser?.location || '',
       availability: currentUser?.availability || 'Available',
       isPublic: currentUser?.isPublic ?? true
-    })
-    setErrors({})
-    setSuccess('')
+    });
+    setErrors({});
+    setSuccess('');
   }
 
   return (
@@ -333,7 +334,7 @@ const Profile = () => {
         }
       `}</style>
     </div>
-  )
+  );
 }
 
 export default Profile;

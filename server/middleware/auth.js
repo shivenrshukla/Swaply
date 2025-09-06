@@ -21,7 +21,7 @@ const auth = async (req, res, next) => {
     }
 
     // Check if user is banned
-    if (user.banned) {
+    if (user.isBanned) {
       return res.status(403).json({ message: 'Account is banned' });
     }
 

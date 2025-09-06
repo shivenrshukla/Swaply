@@ -1,7 +1,7 @@
-// src/pages/AdminPanel.jsx
 import { useEffect, useState } from 'react';
 import adminService from '../services/adminService';
 import { FaUsers, FaSyncAlt, FaExclamationCircle, FaStar } from 'react-icons/fa';
+import { useNavigation } from '../context/NavigationContext';
 
 // This is a simple card component for displaying stats.
 const StatCard = ({ icon, title, value, color }) => (
@@ -16,7 +16,8 @@ const StatCard = ({ icon, title, value, color }) => (
   </div>
 );
 
-const AdminPanel = ({ onPageChange }) => { // <-- Accept onPageChange prop
+const AdminPanel = () => {
+  const { setCurrentPage } = useNavigation();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -54,17 +55,20 @@ const AdminPanel = ({ onPageChange }) => { // <-- Accept onPageChange prop
           <StatCard icon={<FaStar />} title="Average Rating" value={stats?.ratings?.average.toFixed(2) ?? 'N/A'} color="border-purple-500" />
         </div>
 
-        {/* These buttons can navigate if you add cases for them in App.jsx */}
         <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
            <h2 className="text-2xl font-semibold text-cyan-400 mb-6">Admin Actions</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              <button onClick={() => onPageChange('manage-users')} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <button onClick={() => setCurrentPage('manage-users')} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-transform transform hover:scale-105">
                 Manage Users
               </button>
-              <button onClick={() => onPageChange('announcements')} className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg">
+              {/* --- NEW BUTTON ADDED HERE --- */}
+              <button onClick={() => setCurrentPage('moderate-skills')} className="bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-3 px-4 rounded-lg transition-transform transform hover:scale-105">
+                Moderate Skills
+              </button>
+              <button onClick={() => setCurrentPage('announcements')} className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg transition-transform transform hover:scale-105">
                 Announcements
               </button>
-              <button onClick={() => alert('Export data page coming soon!')} className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg">
+              <button onClick={() => alert('Export data page coming soon!')} className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg transition-transform transform hover:scale-105">
                 Export Data
               </button>
             </div>
