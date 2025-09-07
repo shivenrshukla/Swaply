@@ -39,6 +39,28 @@ const UserCard = ({ user, onRequestSwap, className = '' }) => {
           )}
         </div>
       </div>
+      
+      {/* --- ADDED SECTION START --- */}
+      <div className="mb-6 w-full">
+        <p className="text-xs text-purple-200 mb-2 uppercase tracking-wide">Skills Wanted</p>
+        <div className="flex flex-wrap gap-1 justify-center">
+          {user.skillsWanted?.length > 0 ? (
+            user.skillsWanted.map((skill, index) => (
+              <span
+                key={skill._id || index}
+                className="bg-purple-600/30 text-purple-200 px-2 py-1 rounded-full text-xs border border-purple-500/30"
+                title={skill.description}
+              >
+                {skill.name} ({skill.urgency})
+              </span>
+            ))
+          ) : (
+            <span className="text-gray-400 text-sm">No skills wanted</span>
+          )}
+        </div>
+      </div>
+      {/* --- ADDED SECTION END --- */}
+
 
       {user.isAdmin && (
         <p className="text-xs text-yellow-400 mb-2 font-semibold">Admin</p>

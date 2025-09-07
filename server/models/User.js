@@ -65,10 +65,14 @@ const userSchema = new mongoose.Schema({
       required: true,
       trim: true
     },
-    level: {
+    urgency: {
       type: String,
-      enum: ['Beginner', 'Intermediate', 'Advanced', 'Expert'],
+      enum: ['Low', 'Medium', 'High', 'Urgent'],
       required: true
+    },
+    approved: {
+      type: Boolean,
+      default: false
     }
   }],
   availability: {

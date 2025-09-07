@@ -2,6 +2,58 @@ import { useEffect, useState } from 'react';
 import adminService from './../services/adminService';
 import { useNavigation } from './../context/NavigationContext';
 
+/**
+ * A dedicated component to render a list of pending skills for a user.
+ * This makes the main component cleaner and handles the rendering logic.
+ */
+const PendingSkillList = ({ user, skillType, onDecision }) => {
+  const skills = (skillType === 'offered' ? user.skillsOffered : user.skillsWanted)
+    .filter(skill => !skill.approved); // Simplified filter condition
+
+  if (skills.length === 0) {
+    return null; // Don't render anything if there are no pending skills of this type
+  }
+
+  const title = skillType === 'offered' ? 'Skills Offered' : 'Skills Wanted';
+  const titleColor = skillType === 'offered' ? 'text-cyan-300' : 'text-purple-300';
+
+  return (
+    <>
+      <h4 className={`text-lg font-semibold mt-4 mb-2 ${titleColor}`}>{title}</h4>
+      <ul className="divide-y divide-gray-700">
+        {skills.map(skill => (
+          <li key={skill._id} className="py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex-grow">
+              <p className="font-bold text-white">
+                {skill.name}{' '}
+                <span className="text-sm font-normal text-gray-400">
+                  {/* ✅ FIX: Conditionally render level or urgency */}
+                  ({skillType === 'offered' ? skill.level : skill.urgency})
+                </span>
+              </p>
+              <p className="text-sm text-gray-300 mt-1">{skill.description}</p>
+            </div>
+            <div className="flex-shrink-0 mt-4 sm:mt-0 sm:ml-6 flex space-x-3">
+              <button
+                onClick={() => onDecision(user._id, skill._id, true, skillType)}
+                className="px-4 py-2 text-sm font-medium rounded-lg bg-green-600 hover:bg-green-700 text-white transition-colors"
+              >
+                Approve
+              </button>
+              <button
+                onClick={() => onDecision(user._id, skill._id, false, skillType)}
+                className="px-4 py-2 text-sm font-medium rounded-lg bg-red-600 hover:bg-red-700 text-white transition-colors"
+              >
+                Reject
+              </button>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </>
+  );
+};
+
 const ModerateSkills = () => {
   const { setCurrentPage } = useNavigation();
   const [users, setUsers] = useState([]);
@@ -10,6 +62,7 @@ const ModerateSkills = () => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
+  // Memoize fetchSkills to prevent re-creation on every render
   const fetchSkills = async () => {
     setLoading(true);
     setError(null);
@@ -28,12 +81,12 @@ const ModerateSkills = () => {
 
   useEffect(() => {
     fetchSkills();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page]);
 
   const handleDecision = async (userId, skillId, approved, skillType) => {
     let rejectionReason = null;
     if (!approved) {
-      // In a real app, you would use a modal here instead of a prompt.
       rejectionReason = prompt("Please provide a reason for rejecting this skill:");
       if (!rejectionReason) {
         alert("Rejection requires a reason.");
@@ -42,7 +95,6 @@ const ModerateSkills = () => {
     }
     
     try {
-      // Note: This approveSkill function might need skillType as another parameter.
       await adminService.approveSkill(userId, skillType, skillId, approved, rejectionReason);
       // Refresh the list after a decision
       fetchSkills();
@@ -56,43 +108,6 @@ const ModerateSkills = () => {
     if (newPage >= 1 && newPage <= totalPages) {
       setPage(newPage);
     }
-  };
-
-  const renderSkills = (user, skillType) => {
-    const skills = (skillType === 'offered' ? user.skillsOffered : user.skillsWanted)
-      .filter(skill => skill.approved === false);
-
-    if (skills.length === 0) return null;
-
-    return (
-      <>
-        <h4 className={`text-lg font-semibold mt-4 mb-2 ${skillType === 'offered' ? 'text-cyan-300' : 'text-purple-300'}`}>
-          {skillType === 'offered' ? 'Skills Offered' : 'Skills Wanted'}
-        </h4>
-        <ul className="divide-y divide-gray-700">
-          {skills.map(skill => (
-            <li key={skill._id} className="py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex-grow">
-                <p className="font-bold text-white">{skill.name} <span className="text-sm font-normal text-gray-400">({skill.level})</span></p>
-                <p className="text-sm text-gray-300 mt-1">{skill.description}</p>
-              </div>
-              <div className="flex-shrink-0 mt-4 sm:mt-0 sm:ml-6 flex space-x-3">
-                <button
-                  onClick={() => handleDecision(user._id, skill._id, true, skillType)}
-                  className="px-4 py-2 text-sm font-medium rounded-lg bg-green-600 hover:bg-green-700 text-white transition-colors">
-                  Approve
-                </button>
-                <button
-                  onClick={() => handleDecision(user._id, skill._id, false, skillType)}
-                  className="px-4 py-2 text-sm font-medium rounded-lg bg-red-600 hover:bg-red-700 text-white transition-colors">
-                  Reject
-                </button>
-              </div>
-            </li>
-          ))}
-        </ul>
-      </>
-    );
   };
 
   return (
@@ -119,8 +134,10 @@ const ModerateSkills = () => {
                 <div key={user._id} className="bg-gray-800 shadow-lg rounded-lg p-6">
                   <h3 className="text-xl font-bold text-white">{user.name}</h3>
                   <p className="text-sm text-gray-400">{user.email}</p>
-                  {renderSkills(user, 'offered')}
-                  {renderSkills(user, 'wanted')}
+                  
+                  {/* ✅ REFACTOR: Use the new component for cleaner code */}
+                  <PendingSkillList user={user} skillType="offered" onDecision={handleDecision} />
+                  <PendingSkillList user={user} skillType="wanted" onDecision={handleDecision} />
                 </div>
               ))}
             </div>

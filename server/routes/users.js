@@ -159,7 +159,7 @@ router.post('/skills/wanted', [
   auth,
   body('name').trim().isLength({ min: 2, max: 100 }).withMessage('Skill name must be between 2 and 100 characters'),
   body('description').trim().isLength({ min: 10, max: 500 }).withMessage('Description must be between 10 and 500 characters'),
-  body('level').isIn(['Beginner', 'Intermediate', 'Advanced', 'Expert']).withMessage('Invalid skill level')
+  body('urgency').isIn(['Low', 'Medium', 'High', 'Urgent']).withMessage('Invalid skill level')
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -167,7 +167,7 @@ router.post('/skills/wanted', [
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { name, description, level } = req.body;
+    const { name, description, urgency } = req.body;
     const user = await User.findById(req.user._id);
 
     // Check if skill already exists
@@ -179,7 +179,7 @@ router.post('/skills/wanted', [
     user.skillsWanted.push({
       name,
       description,
-      level
+      urgency
     });
 
     await user.save();

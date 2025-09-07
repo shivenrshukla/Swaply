@@ -92,7 +92,6 @@ router.delete('/users/:id', auth, adminAuth, async (req, res) => {
   }
 });
 
-
 // Get all skill requests for moderation
 router.get('/skill-requests', auth, adminAuth, async (req, res) => {
   try {
@@ -100,23 +99,72 @@ router.get('/skill-requests', auth, adminAuth, async (req, res) => {
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
 
-    const users = await User.find({
-      $or: [
-        { 'skillsOffered.approved': false },
-        { 'skillsWanted.approved': false }
-      ]
-    })
-      .select('name email skillsOffered skillsWanted')
-      .skip(skip)
-      .limit(limit)
-      .sort({ updatedAt: -1 });
+    const users = await User.aggregate([
+      {
+        $project: {
+          name: 1,
+          email: 1,
+          skillsOffered: {
+            $filter: {
+              input: { $ifNull: ['$skillsOffered', []] },
+              as: 'skill',
+              cond: { $eq: ['$$skill.approved', false] }
+            }
+          },
+          skillsWanted: {
+            $filter: {
+              input: { $ifNull: ['$skillsWanted', []] },
+              as: 'skill',
+              cond: { $eq: ['$$skill.approved', false] }
+            }
+          }
+        }
+      },
+      {
+        $match: {
+          $or: [
+            { 'skillsOffered.0': { $exists: true } },
+            { 'skillsWanted.0': { $exists: true } }
+          ]
+        }
+      },
+      { $sort: { updatedAt: -1 } },
+      { $skip: skip },
+      { $limit: limit }
+    ]);
 
-    const total = await User.countDocuments({
-      $or: [
-        { 'skillsOffered.approved': false },
-        { 'skillsWanted.approved': false }
-      ]
-    });
+    // Total count of users with unapproved skills
+    const countResult = await User.aggregate([
+      {
+        $project: {
+          skillsOffered: {
+            $filter: {
+              input: { $ifNull: ['$skillsOffered', []] },
+              as: 'skill',
+              cond: { $eq: ['$$skill.approved', false] }
+            }
+          },
+          skillsWanted: {
+            $filter: {
+              input: { $ifNull: ['$skillsWanted', []] },
+              as: 'skill',
+              cond: { $eq: ['$$skill.approved', false] }
+            }
+          }
+        }
+      },
+      {
+        $match: {
+          $or: [
+            { 'skillsOffered.0': { $exists: true } },
+            { 'skillsWanted.0': { $exists: true } }
+          ]
+        }
+      },
+      { $count: 'total' }
+    ]);
+
+    const total = countResult[0] ? countResult[0].total : 0;
 
     res.json({
       users,
@@ -125,6 +173,7 @@ router.get('/skill-requests', auth, adminAuth, async (req, res) => {
       total
     });
   } catch (error) {
+    console.error('Skill requests error:', error);
     res.status(500).json({ message: error.message });
   }
 });
@@ -200,24 +249,11 @@ router.post('/broadcast', auth, adminAuth, async (req, res) => {
       return res.status(400).json({ message: 'Title and content are required' });
     }
 
-    // const users = await User.find({ banned: false }).select('_id');
-    
-    // const messages = users.map(user => ({
-    //   sender: req.user.id,
-    //   recipient: user._id,
-    //   title,
-    //   content,
-    //   type: type || 'announcement',
-    //   isAdminMessage: true
-    // }));
-
     const sentCount = await Message.sendBroadcast({
       senderId: req.user.id,
       title,
       content
     })
-
-    // await Message.insertMany(messages);
 
     res.json({ message: `Broadcast sent to ${sentCount} users` });
   } catch (error) {
