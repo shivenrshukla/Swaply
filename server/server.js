@@ -91,6 +91,15 @@ app.use('/api/chat', require('./routes/chat'));
 app.use('/api/admin', require('./routes/admin'));
 app.use("/api/video", require("./routes/video"));
 
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'OK',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
+});
+
 // --- Serve Frontend Build in Production ---
 const clientBuildPath = path.join(__dirname, "../client/build");
 app.use(express.static(clientBuildPath));
@@ -135,15 +144,6 @@ io.on('connection', (socket) => {
         break;
       }
     }
-  });
-});
-
-// Health check endpoint
-app.get('/health', (req, res) => {
-  res.json({
-    status: 'OK',
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime()
   });
 });
 
