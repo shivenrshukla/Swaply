@@ -18,7 +18,7 @@ export const SocketProvider = ({ children }) => {
     if (user && user._id) {
       // Connect to the server if we have a user and there's no existing connection
       if (!socketRef.current) {
-        const newSocket = io('http://localhost:5000'); // URL of your new backend server
+        const newSocket = io('https://skillswap-production-75d5.up.railway.app/'); // URL of your new backend server
         socketRef.current = newSocket;
         setSocket(newSocket);
 

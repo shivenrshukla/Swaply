@@ -27,7 +27,7 @@ const Register = ({ onPageChange }) => { //
     setError(null)
 
     try {
-      const res = await axios.post('http://localhost:8001/api/auth/register', form)
+      const res = await axios.post('/api/auth/register', form)
 
       login(res.data.user)
 

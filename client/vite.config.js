@@ -9,7 +9,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://localhost:8001',
+        target: 'https://skillswap-production-75d5.up.railway.app/',
         changeOrigin: true,
         secure: false
       }

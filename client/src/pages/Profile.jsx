@@ -88,7 +88,7 @@ const Profile = () => {
     e.preventDefault()
     try {
       const res = await axios.put(
-        'http://localhost:8001/api/users/profile',
+        '/api/users/profile',
         profileFormData,
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -122,7 +122,7 @@ const Profile = () => {
     e.preventDefault()
     try {
       const res = await axios.post(
-        'http://localhost:8001/api/users/skills/offered',
+        '/api/users/skills/offered',
         skillFormData,
         { headers: { Authorization: `Bearer ${token}` } }
       )
@@ -146,7 +146,7 @@ const Profile = () => {
     e.preventDefault()
     try {
       const res = await axios.post(
-        'http://localhost:8001/api/users/skills/wanted',
+        '/api/users/skills/wanted',
         wantedSkillFormData,
         { headers: { Authorization: `Bearer ${token}` } }
       )
