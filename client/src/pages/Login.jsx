@@ -6,34 +6,35 @@ import { useNavigation } from '../context/NavigationContext';
 const Login = () => {
   const { login } = useAuth();
   const { setCurrentPage } = useNavigation();
-  
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState(null)
-  
+
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState(null);
+
+  const API_URL = import.meta.env.VITE_API_BASE_URL.replace(/\/$/, ""); // Remove trailing slash if any
+
   const handleLogin = async (e) => {
-    e.preventDefault()
-    setError(null)
-    
-    const API_URL = import.meta.env.VITE_API_BASE_URL;
+    e.preventDefault();
+    setError(null);
+
     try {
-      const res = await axios.post(`${API_URL}api/auth/login`, {
-        email,
-        password,
-      })
-      
-      login(res.data.user) // ✅ Set user in context
-      
+      const res = await axios.post(`${API_URL}/api/auth/login`, { email, password });
+
+      // ✅ Set user in context
+      login(res.data.user);
+
+      // ✅ Store token in localStorage
       if (res.data.token) {
-        localStorage.setItem('token', res.data.token) // ✅ Store token for later use
+        localStorage.setItem('token', res.data.token);
       }
-      
-      setCurrentPage('home') // ✅ Navigate to home using navigate hook
+
+      // ✅ Navigate to home page
+      setCurrentPage('home');
     } catch (err) {
-      setError(err.response?.data?.message || 'Login failed.')
+      setError(err.response?.data?.message || 'Login failed.');
     }
   };
-  
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-800 via-blue-gray-900 to-gray-900 px-6">
       <div className="bg-gradient-to-tr from-blue-700 to-blue-gray-800 shadow-lg rounded-2xl p-10 max-w-md w-full text-gray-100">
@@ -43,13 +44,13 @@ const Login = () => {
         >
           Welcome Back
         </h2>
-        
+
         {error && (
           <div className="bg-red-700 bg-opacity-75 px-5 py-3 rounded mb-6 text-sm font-semibold text-red-100 shadow-sm">
             {error}
           </div>
         )}
-        
+
         <form onSubmit={handleLogin} className="space-y-6">
           <div>
             <label htmlFor="email" className="block text-sm font-semibold mb-2">Email</label>
@@ -63,7 +64,7 @@ const Login = () => {
               className="w-full px-5 py-3 rounded-md bg-gray-800 border border-gray-600 placeholder-gray-400 text-gray-200 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition"
             />
           </div>
-          
+
           <div>
             <label htmlFor="password" className="block text-sm font-semibold mb-2">Password</label>
             <input
@@ -76,7 +77,7 @@ const Login = () => {
               className="w-full px-5 py-3 rounded-md bg-gray-800 border border-gray-600 placeholder-gray-400 text-gray-200 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition"
             />
           </div>
-          
+
           <button
             type="submit"
             className="w-full bg-cyan-500 hover:bg-cyan-600 text-gray-900 font-semibold py-3 rounded-md shadow-md transition-colors duration-300"
@@ -84,18 +85,18 @@ const Login = () => {
             Login
           </button>
         </form>
-        
+
         <p className="text-sm text-center mt-8 text-gray-400">
           Don't have an account?{' '}
           <button 
-            onClick={() => onPageChange('register')}
+            onClick={() => setCurrentPage('register')}
             className="text-cyan-400 underline hover:text-cyan-500 transition"
           >
             Register
           </button>
         </p>
       </div>
-      
+
       <style>{`
         @keyframes subtleTilt {
           0%, 100% {
