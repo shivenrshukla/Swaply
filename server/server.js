@@ -10,12 +10,12 @@ const multer = require('multer');
 require('dotenv').config();
 
 const app = express();
-const server = http.createServer(app); // Create an HTTP server from the Express app
+const server = http.createServer(app);
 
 // --- Socket.IO Setup ---
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:5173", // Allow requests from your frontend
+    origin: process.env.CLIENT_URL || "*", // Use env var in prod, fallback to *
     methods: ["GET", "POST"]
   }
 });
@@ -25,15 +25,15 @@ app.use(helmet());
 
 // CORS options for Express routes
 const corsOptions = {
-  origin: ['http://localhost:5173'],
+  origin: process.env.CLIENT_URL || "*", // Allow Railway frontend URL
   allowedHeaders: ['Content-Type', 'Authorization'],
-  optionsSuccessStatus: 200 
+  optionsSuccessStatus: 200
 };
 app.use(cors(corsOptions));
 
 // Rate limiting
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
+  windowMs: 15 * 60 * 1000,
   max: 100,
   message: 'Too many requests from this IP, please try again later.'
 });
@@ -80,7 +80,7 @@ mongoose.connect(process.env.MONGO_URL || 'mongodb://127.0.0.1:27017/skillswap',
   console.error('❌ MongoDB connection error:', err);
 });
 
-// Routes
+// API Routes
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/users', require('./routes/users'));
 app.use('/api/matches', require('./routes/matchRoutes'));
@@ -91,8 +91,21 @@ app.use('/api/chat', require('./routes/chat'));
 app.use('/api/admin', require('./routes/admin'));
 app.use("/api/video", require("./routes/video"));
 
+// --- Serve Frontend Build in Production ---
+const clientBuildPath = path.join(__dirname, "../client/build");
+app.use(express.static(clientBuildPath));
+
+// Any route not starting with /api will serve React index.html
+app.get("*", (req, res) => {
+  if (!req.path.startsWith("/api")) {
+    res.sendFile(path.join(clientBuildPath, "index.html"));
+  } else {
+    res.status(404).json({ message: "Route not found" });
+  }
+});
+
 // --- Socket.IO Real-time Logic ---
-let onlineUsers = new Map(); // Using a Map to store userId -> socketId
+let onlineUsers = new Map();
 
 io.on('connection', (socket) => {
   console.log(`🔌 New client connected: ${socket.id}`);
@@ -107,7 +120,6 @@ io.on('connection', (socket) => {
     const recipientSocketId = onlineUsers.get(recipientId);
     console.log(`✉️ Message from ${message.sender} to ${recipientId}`);
     if (recipientSocketId) {
-      console.log(`✅ Found recipient socket: ${recipientSocketId}. Relaying message...`);
       io.to(recipientSocketId).emit('receive_message', message);
     } else {
       console.log(`❌ Recipient ${recipientId} is not online.`);
@@ -141,13 +153,7 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: 'Something went wrong!' });
 });
 
-// 404 handler
-app.use('*', (req, res) => {
-  res.status(404).json({ message: 'Route not found' });
-});
-
 const PORT = process.env.PORT || 5000;
-// Use the http server to listen, which will handle both Express and Socket.IO
-server.listen(PORT, () => {
+server.listen(PORT, "0.0.0.0", () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
