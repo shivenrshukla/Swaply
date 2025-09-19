@@ -101,17 +101,17 @@ app.get('/health', (req, res) => {
 });
 
 // --- Serve Frontend Build in Production ---
-const clientBuildPath = path.join(__dirname, "../client/build");
-app.use(express.static(clientBuildPath));
+// const clientBuildPath = path.join(__dirname, "../client/build");
+// app.use(express.static(clientBuildPath));
 
-// Any route not starting with /api will serve React index.html
-app.get("*", (req, res) => {
-  if (!req.path.startsWith("/api")) {
-    res.sendFile(path.join(clientBuildPath, "index.html"));
-  } else {
-    res.status(404).json({ message: "Route not found" });
-  }
-});
+// // Any route not starting with /api will serve React index.html
+// app.get("*", (req, res) => {
+//   if (!req.path.startsWith("/api")) {
+//     res.sendFile(path.join(clientBuildPath, "index.html"));
+//   } else {
+//     res.status(404).json({ message: "Route not found" });
+//   }
+// });
 
 // --- Socket.IO Real-time Logic ---
 let onlineUsers = new Map();
