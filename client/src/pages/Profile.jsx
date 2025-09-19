@@ -84,11 +84,12 @@ const Profile = () => {
     setSuccess('')
   }
 
+  const API_URL = import.meta.env.VITE_API_BASE_URL;
   const handleProfileSubmit = async (e) => {
     e.preventDefault()
     try {
       const res = await axios.put(
-        '/api/users/profile',
+        `${API_URL}api/users/profile`,
         profileFormData,
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -146,7 +147,7 @@ const Profile = () => {
     e.preventDefault()
     try {
       const res = await axios.post(
-        '/api/users/skills/wanted',
+        `${API_URL}api/users/skills/wanted`,
         wantedSkillFormData,
         { headers: { Authorization: `Bearer ${token}` } }
       )
