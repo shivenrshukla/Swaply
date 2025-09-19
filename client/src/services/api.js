@@ -2,7 +2,6 @@
 import axios from 'axios';
 
 const api = axios.create({
-  // No baseURL is needed anymore!
   // Axios will make requests to relative paths (e.g., '/api/stats'),
   // and Vite will proxy them correctly.
   headers: {

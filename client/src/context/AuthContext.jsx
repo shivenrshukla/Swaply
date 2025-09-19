@@ -1,5 +1,5 @@
 // src/context/AuthContext.js
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect , useMemo, useCallback} from 'react';
 
 export const AuthContext = createContext();
 
@@ -22,29 +22,38 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   // Update login to handle both user and token
-  const login = (userData, tokenData) => {
+  const login = useCallback((userData, tokenData) => {
     localStorage.setItem('user', JSON.stringify(userData));
     localStorage.setItem('token', tokenData);
     setUser(userData);
     setToken(tokenData);
-  }
+  }, []);
 
   // Update logout to clear both user and token
-  const logout = () => {
+  const logout = useCallback(() => {
     localStorage.removeItem('user')
     localStorage.removeItem('token')
     setUser(null)
     setToken(null)
-  };
+  }, []);
 
-  const updateUser = (newUserData) => {
+  const updateUser = useCallback((newUserData) => {
     setUser(newUserData);
     localStorage.setItem('user', JSON.stringify(newUserData));
-  }
+  }, []);
+
+  const value = useMemo(() => ({
+    user,
+    token,
+    loading,
+    setUser: updateUser,
+    login,
+    logout
+  }), [user, token, loading, updateUser, login, logout]);
 
   // Provide the token in the context value
   return (
-    <AuthContext.Provider value={{ user, setUser: updateUser, token, login, logout, loading }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );

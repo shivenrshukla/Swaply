@@ -1,18 +1,102 @@
 // routes/matchRoutes.js
 const express = require('express');
 const router = express.Router();
+const Request = require('../models/Request'); 
 const Match = require('../models/Match'); // Adjust path as needed
 const auth = require('../middleware/auth'); // Adjust path as needed
+
+router.post('/create', auth, async (req, res) => {
+  const { requestId, duration, schedule, startDate } = req.body;
+
+  if (!requestId || !duration || !schedule || !startDate) {
+    return res.status(400).json({ message: 'Missing required fields for match creation.' });
+  }
+
+  try {
+    const originalRequest = await Request.findById(requestId)
+      .populate('requester', 'name')
+      .populate('recipient', 'name');
+
+    if (!originalRequest) {
+      return res.status(404).json({ message: 'The original swap request could not be found.' });
+    }
+    
+    const currentUserId = req.user.id;
+    const isParticipant = [originalRequest.requester._id.toString(), originalRequest.recipient._id.toString()].includes(currentUserId);
+    
+    if (!isParticipant) {
+      return res.status(403).json({ message: 'You are not authorized to confirm this match.' });
+    }
+    
+    const endDate = new Date(startDate);
+    const durationMonths = parseInt(duration.split(' ')[0], 10);
+    if (!isNaN(durationMonths)) {
+      endDate.setMonth(endDate.getMonth() + durationMonths);
+    }
+
+    // Fixed: Handle the skill structure properly
+    const newMatch = new Match({
+      originalRequest: requestId,
+      status: 'active',
+      duration,
+      schedule,
+      startDate,
+      endDate,
+      participants: [
+        {
+          user: originalRequest.requester._id,
+          skillOffered: {
+            skillId: originalRequest.skillOffered.skillId || null,
+            skillName: originalRequest.skillOffered.skillName,
+          },
+          skillRequested: {
+            skillId: originalRequest.skillRequested.skillId || null,
+            skillName: originalRequest.skillRequested.skillName,
+          },
+        },
+        {
+          user: originalRequest.recipient._id,
+          // The skills are swapped for the second participant
+          skillOffered: {
+            skillId: originalRequest.skillRequested.skillId || null,
+            skillName: originalRequest.skillRequested.skillName,
+          },
+          skillRequested: {
+            skillId: originalRequest.skillOffered.skillId || null,
+            skillName: originalRequest.skillOffered.skillName,
+          },
+        },
+      ],
+    });
+
+    await newMatch.save();
+    await Request.findByIdAndDelete(requestId);
+    
+    res.status(201).json({
+        success: true,
+        message: 'Match created successfully!',
+        match: newMatch
+    });
+
+  } catch (error) {
+    // This detailed log will now show you the specific validation error if one occurs
+    console.error('Match creation error:', error.message, error.stack);
+    res.status(500).json({ message: 'Server error during match creation.', error: error.message });
+  }
+});
 
 // GET /api/matches - Get all matches for authenticated user
 router.get('/', auth, async (req, res) => {
   try {
+    console.log('🔍 Authenticated user ID:', req.user._id);
+    console.log('🔍 User ID type:', typeof req.user._id);
+
     const { status = 'all' } = req.query;
-    const matches = await Match.getMatchesForUser(req.user.id, status);
+    const matches = await Match.getMatchesForUser(req.user._id, status);
     
     res.json({
       success: true,
-      matches,
+      matches,  
       count: matches.length
     });
   } catch (error) {

@@ -1,34 +1,53 @@
-// src/context/SocketContext.jsx
-import { createContext, useContext, useEffect, useState } from 'react'
-import { io } from 'socket.io-client'
+import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
+import io from 'socket.io-client';
+import { useAuth } from './AuthContext'; // Your app's authentication context
 
-const SocketContext = createContext(null)
+const SocketContext = createContext(null);
+
+export const useSocket = () => {
+  return useContext(SocketContext);
+};
 
 export const SocketProvider = ({ children }) => {
-  const [socket, setSocket] = useState(null)
+  const [socket, setSocket] = useState(null);
+  const { user } = useAuth(); // Get the authenticated user from your context
+  const socketRef = useRef(null);
 
   useEffect(() => {
-    // Connect to your backend Socket.IO server (adjust URL)
-    const newSocket = io(import.meta.env.VITE_API_URL)
-    setSocket(newSocket)
+    // Effect runs when the authenticated user changes
+    if (user && user._id) {
+      // Connect to the server if we have a user and there's no existing connection
+      if (!socketRef.current) {
+        const newSocket = io('http://localhost:5000'); // URL of your new backend server
+        socketRef.current = newSocket;
+        setSocket(newSocket);
 
-    // Cleanup on unmount
-    return () => {
-      newSocket.disconnect()
+        // Announce the user's presence to the server
+        newSocket.emit('add_user', user._id);
+      }
+    } else {
+      // If there's no user, disconnect the socket
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+        socketRef.current = null;
+        setSocket(null);
+      }
     }
-  }, [])
+
+    // Cleanup on component unmount
+    return () => {
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+        socketRef.current = null;
+        setSocket(null);
+      }
+    };
+  }, [user]); // This effect depends on the user object
 
   return (
     <SocketContext.Provider value={socket}>
       {children}
     </SocketContext.Provider>
-  )
-}
+  );
+};
 
-export const useSocket = () => {
-  const socket = useContext(SocketContext)
-  if (!socket) {
-    throw new Error('useSocket must be used within a SocketProvider')
-  }
-  return socket
-}

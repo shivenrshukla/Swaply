@@ -1,4 +1,6 @@
 const express = require('express');
+const http = require('http');
+const { Server } = require("socket.io");
 const mongoose = require('mongoose');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -8,11 +10,20 @@ const multer = require('multer');
 require('dotenv').config();
 
 const app = express();
+const server = http.createServer(app); // Create an HTTP server from the Express app
+
+// --- Socket.IO Setup ---
+const io = new Server(server, {
+  cors: {
+    origin: "http://localhost:5173", // Allow requests from your frontend
+    methods: ["GET", "POST"]
+  }
+});
 
 // Security middleware
 app.use(helmet());
 
-// CORS options to allow requests from your frontend
+// CORS options for Express routes
 const corsOptions = {
   origin: ['http://localhost:5173'],
   allowedHeaders: ['Content-Type', 'Authorization'],
@@ -23,7 +34,7 @@ app.use(cors(corsOptions));
 // Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs(15 minutes)
+  max: 100,
   message: 'Too many requests from this IP, please try again later.'
 });
 app.use('/api/', limiter);
@@ -35,41 +46,38 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // Static files for uploads
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Configure multer for file storage
+// Multer configuration for file storage
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, 'uploads/');
   },
   filename: function (req, file, cb) {
-    const username = req.body.username || 'anonymous'; // Get username from form body
+    const username = req.body.username || 'anonymous';
     const timestamp = Date.now();
     const random = Math.round(Math.random() * 1E9);
     const ext = path.extname(file.originalname);
-
-    const safeUsername = username.replace(/[^a-z0-9]/gi, '_').toLowerCase(); // sanitize username
+    const safeUsername = username.replace(/[^a-z0-9]/gi, '_').toLowerCase();
     const filename = `${file.fieldname}-${safeUsername}-${timestamp}-${random}${ext}`;
     cb(null, filename);
   }
 });
-
 const upload = multer({ storage: storage });
 
 app.post('/upload', upload.single('image'), (req, res) => {
-  // File is saved to disk automatically by multer
   res.json({
     message: 'File uploaded successfully!',
-    filePath: `/uploads/${req.file.filename}` // Use this URL in frontend
+    filePath: `/uploads/${req.file.filename}`
   });
 });
 
 // MongoDB connection
-mongoose.connect(process.env.MONGO_URL, {
+mongoose.connect(process.env.MONGO_URL || 'mongodb://127.0.0.1:27017/skillswap', {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 }).then(() => {
-  console.log('Connected to MongoDB');
+  console.log('✅ Connected to MongoDB');
 }).catch(err => {
-  console.error('MongoDB connection error:', err);
+  console.error('❌ MongoDB connection error:', err);
 });
 
 // Routes
@@ -79,9 +87,44 @@ app.use('/api/matches', require('./routes/matchRoutes'));
 app.use('/api/skills', require('./routes/skills'));
 app.use('/api/requests', require('./routes/requests'));
 app.use('/api/ratings', require('./routes/ratings'));
-app.use('/api/messages', require('./routes/messages'));
+app.use('/api/chat', require('./routes/chat'));
 app.use('/api/admin', require('./routes/admin'));
 app.use("/api/video", require("./routes/video"));
+
+// --- Socket.IO Real-time Logic ---
+let onlineUsers = new Map(); // Using a Map to store userId -> socketId
+
+io.on('connection', (socket) => {
+  console.log(`🔌 New client connected: ${socket.id}`);
+
+  socket.on('add_user', (userId) => {
+    onlineUsers.set(userId.toString(), socket.id);
+    console.log(`👤 User added: ${userId} with socket ${socket.id}`);
+  });
+
+  socket.on('send_message', (message) => {
+    const recipientId = message.recipient?.toString();
+    const recipientSocketId = onlineUsers.get(recipientId);
+    console.log(`✉️ Message from ${message.sender} to ${recipientId}`);
+    if (recipientSocketId) {
+      console.log(`✅ Found recipient socket: ${recipientSocketId}. Relaying message...`);
+      io.to(recipientSocketId).emit('receive_message', message);
+    } else {
+      console.log(`❌ Recipient ${recipientId} is not online.`);
+    }
+  });
+
+  socket.on('disconnect', () => {
+    console.log(`🔌 Client disconnected: ${socket.id}`);
+    for (let [userId, socketId] of onlineUsers.entries()) {
+      if (socketId === socket.id) {
+        onlineUsers.delete(userId);
+        console.log(`👤 User removed: ${userId}`);
+        break;
+      }
+    }
+  });
+});
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -104,6 +147,7 @@ app.use('*', (req, res) => {
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+// Use the http server to listen, which will handle both Express and Socket.IO
+server.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
 });

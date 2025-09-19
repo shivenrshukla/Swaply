@@ -1,16 +1,16 @@
-// src/services/swapService.js
 import axios from 'axios';
 
-// Create axios instance with base configuration
+// Create an axios instance with base configuration.
+// This is a best practice for managing API calls.
 const api = axios.create({
-  baseURL: '/api/', // CORRECTED: Use a relative path to work with the Vite proxy
+  baseURL: '/api/',
   timeout: 10000,
 });
 
-// Add auth token to requests from localStorage
+// Use an interceptor to automatically add the auth token to every request.
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token'); // Ensure this matches how you store the token
+    const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -21,65 +21,32 @@ api.interceptors.request.use(
   }
 );
 
-// Handle response errors, such as 401 for an invalid token
+// Use an interceptor to handle global response errors, like 401 Unauthorized.
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // If token is expired or invalid, clear it and redirect to login
+      // If token is expired or invalid, log the user out.
       localStorage.removeItem('token');
-      window.location.href = '/login';
+      window.location.href = '/login'; // Redirect to login page
     }
     return Promise.reject(error);
   }
 );
 
 const swapService = {
-  /**
-   * Sends a new skill swap request to the backend.
-   * @param {object} requestData - The data for the swap request.
-   * @param {string} requestData.recipientId - The ID of the user receiving the request.
-   * @param {string} requestData.skillToOffer - The skill being offered.
-   * @param {string} requestData.skillToRequest - The skill being requested.
-   * @param {string} requestData.message - Additional message.
-   * @param {string} requestData.proposedDuration - Proposed duration.
-   * @param {string} requestData.proposedSchedule - Proposed schedule.
-   */
+  // --- Request Management ---
+
   sendSwapRequest: async (requestData) => {
     try {
-      // Transform the data to match backend expectations
-      const transformedData = {
-        recipientId: requestData.recipientId,
-        skillToOffer: requestData.skillToOffer,
-        skillToRequest: requestData.skillToRequest,
-        message: requestData.message,
-        proposedDuration: requestData.proposedDuration,
-        proposedSchedule: requestData.proposedSchedule
-      };
-
-      console.log('Sending request data:', transformedData); // Debug log
-      
-      const response = await api.post('/requests', transformedData);
+      const response = await api.post('/requests', requestData);
       return response.data;
     } catch (error) {
       console.error('Error sending swap request:', error.response?.data || error.message);
-      
-      // Log detailed error information for debugging
-      if (error.response?.data?.errors) {
-        console.log('Validation errors:', error.response.data.errors);
-        error.response.data.errors.forEach((err, index) => {
-          console.log(`Error ${index + 1}:`, err);
-        });
-      }
-      
       throw error;
     }
   },
 
-  /**
-   * Fetches received swap requests for the authenticated user.
-   * Aligned with the GET /api/requests/received route.
-   */
   getReceivedRequests: async () => {
     try {
       const response = await api.get('/requests/received');
@@ -90,11 +57,6 @@ const swapService = {
     }
   },
 
-  /**
-   * Accepts a swap request.
-   * Aligned with the PUT /api/requests/:id/accept route.
-   * @param {string} requestId - The ID of the request to accept.
-   */
   acceptRequest: async (requestId) => {
     try {
       const response = await api.put(`/requests/${requestId}/accept`);
@@ -105,11 +67,6 @@ const swapService = {
     }
   },
 
-  /**
-   * Rejects a swap request.
-   * Aligned with the PUT /api/requests/:id/reject route.
-   * @param {string} requestId - The ID of the request to reject.
-   */
   rejectRequest: async (requestId) => {
     try {
       const response = await api.put(`/requests/${requestId}/reject`);
@@ -119,8 +76,25 @@ const swapService = {
       throw error;
     }
   },
+ 
+  // --- Match Management ---
 
-  // --- Existing Match Functions ---
+  /**
+   * Creates a new match from an accepted request.
+   * @param {object} matchData - The payload containing { requestId, duration, schedule, startDate }.
+   * @returns {object} The newly created match object.
+   */
+  createMatch: async (matchData) => {
+    try {
+      // CORRECTED: Uses the 'api' instance, so auth headers are added automatically.
+      const response = await api.post('/matches/create', matchData);
+      return response.data;
+    } catch (error) {
+      console.error('Error creating match:', error.response?.data || error.message);
+      throw error;
+    }
+  },
+
   getMatches: async (status = 'all') => {
     try {
       const response = await api.get('/matches', { params: { status } });

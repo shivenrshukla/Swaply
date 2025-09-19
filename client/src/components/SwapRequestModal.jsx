@@ -15,10 +15,11 @@ const SwapRequestModal = ({ isOpen, onClose, targetUser, onSubmit }) => {
   const [showRequestSkillInput, setShowRequestSkillInput] = useState(false)
   const [errorMessage, setErrorMessage] = useState(null)
 
-  // Mock user skills for demo, these will be suggestions now
-  const mockUserSkills = ['React', 'Node.js', 'MongoDB', 'JavaScript', 'Python', 'TypeScript', 'Data Science', 'UI/UX Design', 'Cloud Computing', 'Mobile Development']
+  const mockUserSkills = [
+    'React', 'Node.js', 'MongoDB', 'JavaScript', 'Python',
+    'TypeScript', 'Data Science', 'UI/UX Design', 'Cloud Computing', 'Mobile Development'
+  ]
 
-  // Function to display a custom alert message within the modal
   const showAlert = (message) => {
     setErrorMessage(message)
   }
@@ -34,22 +35,20 @@ const SwapRequestModal = ({ isOpen, onClose, targetUser, onSubmit }) => {
 
     setLoading(true)
     try {
-      // Make sure we're sending the correct field names that match the backend
+      // Fixed: Send data in the format expected by backend
       const requestData = {
         recipientId: targetUser._id,
-        skillToOffer: formData.skillToOffer,
-        skillToRequest: formData.skillToRequest,
+        skillToOffer: formData.skillToOffer,  // Changed from { skillName: formData.skillToOffer }
+        skillToRequest: formData.skillToRequest,  // Changed from { skillName: formData.skillToRequest }
         message: formData.message,
-        proposedDuration: formData.duration,  // Backend expects 'proposedDuration'
-        proposedSchedule: formData.schedule   // Backend expects 'proposedSchedule'
+        proposedDuration: formData.duration,
+        proposedSchedule: formData.schedule
       }
 
-      console.log('Submitting request data:', requestData) // Debug log
+      console.log('Submitting request data:', requestData)
 
-      // Call the onSubmit prop, which is expected to handle the API request
       await onSubmit(requestData)
 
-      // Reset form on successful submission
       setFormData({
         skillToOffer: '',
         skillToRequest: '',
@@ -57,10 +56,9 @@ const SwapRequestModal = ({ isOpen, onClose, targetUser, onSubmit }) => {
         duration: '',
         schedule: ''
       })
-      onClose() // Close the modal after successful submission
+      onClose()
     } catch (err) {
       console.error('Error submitting request:', err)
-      // Display a user-friendly error message
       showAlert('Failed to send request. Please check your network and try again.')
     } finally {
       setLoading(false)
@@ -69,8 +67,6 @@ const SwapRequestModal = ({ isOpen, onClose, targetUser, onSubmit }) => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
-
-    // Logic to switch to text input if 'other' is selected in the dropdown
     if (name === 'skillToOffer' && value === 'other') {
       setShowOfferSkillInput(true)
       setFormData(prev => ({ ...prev, skillToOffer: '' }))
@@ -78,10 +74,7 @@ const SwapRequestModal = ({ isOpen, onClose, targetUser, onSubmit }) => {
       setShowRequestSkillInput(true)
       setFormData(prev => ({ ...prev, skillToRequest: '' }))
     } else {
-      setFormData(prev => ({
-        ...prev,
-        [name]: value
-      }))
+      setFormData(prev => ({ ...prev, [name]: value }))
     }
   }
 
@@ -94,7 +87,6 @@ const SwapRequestModal = ({ isOpen, onClose, targetUser, onSubmit }) => {
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
-              {/* Fallback image for targetUser.avatar */}
               <img
                 src={targetUser.avatar || `https://placehold.co/48x48/1e293b/e2e8f0?text=${targetUser.name.charAt(0)}`}
                 alt={targetUser.name}
@@ -102,36 +94,24 @@ const SwapRequestModal = ({ isOpen, onClose, targetUser, onSubmit }) => {
                 onError={(e) => { e.target.onerror = null; e.target.src = `https://placehold.co/48x48/1e293b/e2e8f0?text=${targetUser.name.charAt(0)}`; }}
               />
               <div>
-                <h2 className="text-2xl font-bold text-cyan-300">
-                  Request Skill Swap
-                </h2>
+                <h2 className="text-2xl font-bold text-cyan-300">Request Skill Swap</h2>
                 <p className="text-blue-200">with {targetUser.name}</p>
               </div>
             </div>
-            <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-white transition-colors duration-200 text-2xl"
-            >
-              ×
-            </button>
+            <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors duration-200 text-2xl">×</button>
           </div>
 
-          {/* Display error message if present */}
           {errorMessage && (
             <div className="bg-red-700 bg-opacity-75 px-5 py-3 rounded mb-6 text-sm font-semibold text-red-100 shadow-sm">
               {errorMessage}
             </div>
           )}
 
-          {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Skills Selection - Skill You'll Teach */}
+            {/* Offer Skill */}
             <div>
-              <label className="block text-sm font-medium text-blue-200 mb-2">
-                Skill You'll Teach
-              </label>
+              <label className="block text-sm font-medium text-blue-200 mb-2">Skill You'll Teach</label>
               <div className="flex items-center gap-2">
-                {/* Conditional rendering for select or input */}
                 {!showOfferSkillInput ? (
                   <select
                     name="skillToOffer"
@@ -165,12 +145,10 @@ const SwapRequestModal = ({ isOpen, onClose, targetUser, onSubmit }) => {
                     setFormData(prev => ({ ...prev, skillToOffer: '' }))
                   }}
                   className="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-lg text-sm"
-                  title={showOfferSkillInput ? "Select from list" : "Type your own skill"}
                 >
                   {showOfferSkillInput ? 'List' : 'Type'}
                 </button>
               </div>
-              {/* Datalist for suggestions */}
               <datalist id="offerSkills">
                 {mockUserSkills.map((skill) => (
                   <option key={skill} value={skill} />
@@ -178,11 +156,9 @@ const SwapRequestModal = ({ isOpen, onClose, targetUser, onSubmit }) => {
               </datalist>
             </div>
 
-            {/* Skills Selection - Skill You Want to Learn */}
+            {/* Request Skill */}
             <div>
-              <label className="block text-sm font-medium text-blue-200 mb-2">
-                Skill You Want to Learn
-              </label>
+              <label className="block text-sm font-medium text-blue-200 mb-2">Skill You Want to Learn</label>
               <div className="flex items-center gap-2">
                 {!showRequestSkillInput ? (
                   <select
@@ -217,12 +193,10 @@ const SwapRequestModal = ({ isOpen, onClose, targetUser, onSubmit }) => {
                     setFormData(prev => ({ ...prev, skillToRequest: '' }))
                   }}
                   className="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-lg text-sm"
-                  title={showRequestSkillInput ? "Select from list" : "Type your own skill"}
                 >
                   {showRequestSkillInput ? 'List' : 'Type'}
                 </button>
               </div>
-              {/* Datalist for suggestions */}
               <datalist id="requestSkills">
                 {mockUserSkills.map((skill) => (
                   <option key={skill} value={skill} />
@@ -232,9 +206,7 @@ const SwapRequestModal = ({ isOpen, onClose, targetUser, onSubmit }) => {
 
             {/* Duration */}
             <div>
-              <label className="block text-sm font-medium text-blue-200 mb-2">
-                Proposed Duration
-              </label>
+              <label className="block text-sm font-medium text-blue-200 mb-2">Proposed Duration</label>
               <select
                 name="duration"
                 value={formData.duration}
@@ -254,9 +226,7 @@ const SwapRequestModal = ({ isOpen, onClose, targetUser, onSubmit }) => {
 
             {/* Schedule */}
             <div>
-              <label className="block text-sm font-medium text-blue-200 mb-2">
-                Proposed Schedule
-              </label>
+              <label className="block text-sm font-medium text-blue-200 mb-2">Proposed Schedule</label>
               <select
                 name="schedule"
                 value={formData.schedule}
@@ -277,9 +247,7 @@ const SwapRequestModal = ({ isOpen, onClose, targetUser, onSubmit }) => {
 
             {/* Message */}
             <div>
-              <label className="block text-sm font-medium text-blue-200 mb-2">
-                Personal Message
-              </label>
+              <label className="block text-sm font-medium text-blue-200 mb-2">Personal Message</label>
               <textarea
                 name="message"
                 value={formData.message}
@@ -290,34 +258,22 @@ const SwapRequestModal = ({ isOpen, onClose, targetUser, onSubmit }) => {
                 required
                 maxLength={500}
               />
-              <p className="text-xs text-gray-400 mt-1">
-                {formData.message.length}/500 characters
-              </p>
+              <p className="text-xs text-gray-400 mt-1">{formData.message.length}/500 characters</p>
             </div>
 
-            {/* Target User Info */}
-            <div className="bg-blue-600/20 p-4 rounded-lg border border-blue-500/30">
-              <h3 className="text-lg font-semibold text-blue-300 mb-2">About {targetUser.name}</h3>
-              <p className="text-sm text-blue-200 mb-2">{targetUser.bio}</p>
-              <div className="flex items-center gap-4 text-sm text-gray-300">
-                <span>⭐ {targetUser.rating}/5</span>
-                <span>🔄 {targetUser.completedSwaps} swaps completed</span>
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex gap-3 pt-4">
+            {/* Submit */}
+            <div className="flex justify-end gap-3 pt-4">
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200"
+                className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors duration-200"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={loading}
-                className="flex-1 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 disabled:from-gray-500 disabled:to-gray-600 text-white font-semibold py-3 px-4 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105 active:scale-95 disabled:scale-100"
+                className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 disabled:opacity-50 text-white font-semibold px-4 py-2 rounded-lg"
               >
                 {loading ? 'Sending...' : 'Send Request'}
               </button>
@@ -329,4 +285,4 @@ const SwapRequestModal = ({ isOpen, onClose, targetUser, onSubmit }) => {
   )
 }
 
-export default SwapRequestModal;
+export default SwapRequestModal

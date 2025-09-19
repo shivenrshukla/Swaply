@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { AuthProvider } from './context/AuthContext';
 import { NavigationProvider, useNavigation } from './context/NavigationContext';
 import Navbar from './components/Navbar';
+import { SocketProvider } from './context/SocketContext';
 
 // Import pages
 import Home from './pages/Home';
@@ -16,7 +17,7 @@ import ManageUsers from './pages/ManageUsers';
 import Announcements from './pages/Announcements';
 import ModerateSkills from './pages/ModerateSkills';
 import GetAnnouncements from './pages/GetAnnouncements';
-
+import Chat from './pages/Chat';
 function RenderPage() {
   const { currentPage }  = useNavigation();
 
@@ -32,6 +33,7 @@ function RenderPage() {
     case 'announcements': return <Announcements />;
     case 'get-announcements': return <GetAnnouncements />
     case 'moderate-skills': return <ModerateSkills />;
+    case 'chat': return <Chat/>
     default: return <Home />;
   }
 }
@@ -41,12 +43,14 @@ function App() {
   const { currentPage, setCurrentPage } = useNavigation();
 
   return (
-    <AuthProvider>
-      <div className="min-h-screen bg-gradient-to-br from-gray-800 via-blue-gray-900 to-gray-900">
-        <Navbar currentPage={currentPage} onPageChange={setCurrentPage} />
-        <main><RenderPage /></main>
-      </div>
-    </AuthProvider>
+      <AuthProvider>
+        <SocketProvider>
+        <div className="min-h-screen bg-gradient-to-br from-gray-800 via-blue-gray-900 to-gray-900">
+          <Navbar currentPage={currentPage} onPageChange={setCurrentPage} />
+          <main><RenderPage /></main>
+        </div>
+        </SocketProvider>
+      </AuthProvider>
   );
 }
 

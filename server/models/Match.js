@@ -37,7 +37,7 @@ const participantSchema = new mongoose.Schema({
   skillOffered: {
     skillId: {
       type: mongoose.Schema.Types.ObjectId,
-      required: true
+      required: false  // Changed from true to false
     },
     skillName: {
       type: String,
@@ -47,7 +47,7 @@ const participantSchema = new mongoose.Schema({
   skillRequested: {
     skillId: {
       type: mongoose.Schema.Types.ObjectId,
-      required: true
+      required: false  // Changed from true to false
     },
     skillName: {
       type: String,
@@ -184,19 +184,34 @@ matchSchema.methods.markCompleted = function() {
 };
 
 // Static method to get matches for a user
+// Fixed Match.js - Static method to get matches for a user
 matchSchema.statics.getMatchesForUser = function(userId, status = 'all') {
+  // Ensure userId is converted to ObjectId if it's a string
+  let userObjectId;
+  try {
+    userObjectId = mongoose.Types.ObjectId.isValid(userId) 
+      ? new mongoose.Types.ObjectId(userId) 
+      : userId;
+  } catch (error) {
+    console.error('Invalid userId format:', userId);
+    return Promise.resolve([]);
+  }
+
   const query = {
-    'participants.user': userId
+    'participants.user': userObjectId
   };
-  
+
   if (status !== 'all') {
     query.status = status;
   }
-  
+
+  console.log('Query for getMatchesForUser:', JSON.stringify(query));
+
   return this.find(query)
     .populate('participants.user', 'name email avatar')
     .populate('originalRequest')
-    .sort({ lastActivity: -1 });
+    .sort({ lastActivity: -1 })
+    .lean(); // Add lean() for better performance
 };
 
 // Static method to get active matches count for a user
