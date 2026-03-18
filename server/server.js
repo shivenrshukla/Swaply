@@ -221,7 +221,7 @@ app.use(helmet());
 // CORS options for Express routes
 const corsOptions = {
   origin: process.env.CLIENT_URL || "*",
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   optionsSuccessStatus: 200
 };
