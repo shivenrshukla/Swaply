@@ -46,19 +46,24 @@ const ManageUsers = () => {
     }
   };
 
-  const handleDeleteUser = async (userId) => {
+  const handleBanUser = async (userId, banned) => {
     if (userId === currentUser?._id) {
-      alert("You cannot delete yourself.");
+      alert("You cannot ban yourself.");
       return;
     }
-    if (window.confirm('Are you sure you want to delete this user permanently? This action cannot be undone.')) {
-      try {
-        await adminService.deleteUser(userId);
-        fetchUsers();
-      } catch (error) {
-        console.error("Failed to delete user:", error);
-        alert("Could not delete user.");
-      }
+    
+    let banReason = '';
+    if (banned) {
+      banReason = prompt("Please provide a reason for the ban:");
+      if (banReason === null) return; // User cancelled prompt
+    }
+
+    try {
+      await adminService.setBanStatus(userId, banned, banReason);
+      fetchUsers();
+    } catch (error) {
+      console.error(`Failed to ${banned ? 'ban' : 'unban'} user:`, error);
+      alert(`Could not ${banned ? 'ban' : 'unban'} user.`);
     }
   };
 
@@ -167,6 +172,38 @@ const ManageUsers = () => {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 15l7-7 7 7" />
                               </svg>
                               Make Admin
+                            </button>
+                          )}
+                          
+                          {user.isBanned ? (
+                            <button 
+                              onClick={() => handleBanUser(user._id, false)} 
+                              className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg border transition-all duration-200
+                                         bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-500 hover:to-cyan-500
+                                         text-white border-teal-500 hover:border-teal-400
+                                         shadow-md hover:shadow-lg hover:shadow-teal-500/25
+                                         transform hover:scale-105 active:scale-95"
+                            >
+                              <svg className="w-3 h-3 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                              Unban
+                            </button>
+                          ) : (
+                            <button 
+                              onClick={() => handleBanUser(user._id, true)} 
+                              disabled={user._id === currentUser?._id}
+                              className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg border transition-all duration-200
+                                         bg-gradient-to-r from-orange-600 to-yellow-600 hover:from-orange-500 hover:to-yellow-500
+                                         text-white border-orange-500 hover:border-orange-400
+                                         shadow-md hover:shadow-lg hover:shadow-orange-500/25
+                                         disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none
+                                         transform hover:scale-105 active:scale-95"
+                            >
+                              <svg className="w-3 h-3 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                              </svg>
+                              Ban
                             </button>
                           )}
                           

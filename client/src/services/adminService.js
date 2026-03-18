@@ -43,6 +43,11 @@ const adminService = {
   deleteUser: (userId) => {
     return api.delete(`/api/admin/users/${userId}`);
   },
+
+  // Ban/Unban user
+  setBanStatus: (userId, banned, banReason = '') => {
+    return api.patch(`/api/admin/users/${userId}/ban`, { banned, banReason });
+  },
 };
 
 export default adminService;
