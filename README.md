@@ -1,8 +1,8 @@
-# 🤝 SkillSwap (Swaply)
+# 🤝 Swaply
 
 **Empower Your Learning through Direct Skill Exchange.**
 
-SkillSwap is a modern, real-time platform designed to facilitate peer-to-peer knowledge sharing. Whether you're an expert looking to learn something new or a beginner ready to share your unique talents, SkillSwap connects you with the right partners to grow together.
+Swaply is a modern, real-time platform designed to facilitate peer-to-peer knowledge sharing. Whether you're an expert looking to learn something new or a beginner ready to share your unique talents, Swaply connects you with the right partners to grow together.
 
 ---
 
@@ -47,7 +47,7 @@ SkillSwap is a modern, real-time platform designed to facilitate peer-to-peer kn
 ## 📂 Project Structure
 
 ```bash
-SkillSwap/
+Swaply/
 ├── client/                # React (Vite) Frontend
 │   ├── src/
 │   │   ├── components/    # UI Components (Navbar, Cards, etc.)
@@ -95,28 +95,9 @@ SkillSwap/
    npm run dev
    ```
 
-### 🔐 Environment Variables
-Your `.env` files should include:
-
-**Server**:
-- `MONGO_URL`
-- `JWT_SECRET`
-- `CLIENT_URL`
-- `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`
-- `EMAIL_USER`, `EMAIL_PASS` (for Nodemailer)
-
-**Client**:
-- `VITE_API_URL`
-- `VITE_SOCKET_URL`
-
----
-
 ## 👥 Authors
 
-- **Rayyan Siddiqui** - [siddiqui.rayyan@gmail.com](mailto:siddiqui.rayyan@gmail.com)
 - **Shiven Shukla** - [shiven.shukla23@spit.ac.in](mailto:shiven.shukla23@spit.ac.in)
-- **Mahir Shah** - [mahir.shah23@spit.ac.in](mailto:mahir.shah23@spit.ac.in)
-- **Darsan Shah** - [darshan.shah23@spit.ac.in](mailto:darshan.shah23@spit.ac.in)
 
 ---
 
