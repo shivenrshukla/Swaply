@@ -5,7 +5,7 @@ import { useNavigation } from '../context/NavigationContext';
 
 const Login = () => {
   const { login } = useAuth();
-  const { setCurrentPage } = useNavigation();
+  const { navigate } = useNavigation();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -20,16 +20,11 @@ const Login = () => {
     try {
       const res = await axios.post(`${API_URL}/api/auth/login`, { email, password });
 
-      // ✅ Set user in context
-      login(res.data.user);
-
-      // ✅ Store token in localStorage
-      if (res.data.token) {
-        localStorage.setItem('token', res.data.token);
-      }
+      // ✅ Set user and token in context (login handles localStorage too)
+      login(res.data.user, res.data.token);
 
       // ✅ Navigate to home page
-      setCurrentPage('home');
+      navigate('home');
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed.');
     }
@@ -89,7 +84,7 @@ const Login = () => {
         <p className="text-sm text-center mt-8 text-gray-400">
           Don't have an account?{' '}
           <button 
-            onClick={() => setCurrentPage('register')}
+            onClick={() => navigate('register')}
             className="text-cyan-400 underline hover:text-cyan-500 transition"
           >
             Register

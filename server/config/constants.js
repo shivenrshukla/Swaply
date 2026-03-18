@@ -1,11 +1,11 @@
 // User roles
-const USER_ROLES = {
+export const USER_ROLES = {
   USER: 'user',
   ADMIN: 'admin'
 };
 
 // Request statuses
-const REQUEST_STATUS = {
+export const REQUEST_STATUS = {
   PENDING: 'pending',
   ACCEPTED: 'accepted',
   REJECTED: 'rejected',
@@ -14,21 +14,21 @@ const REQUEST_STATUS = {
 };
 
 // Skill statuses
-const SKILL_STATUS = {
+export const SKILL_STATUS = {
   PENDING: 'pending',
   APPROVED: 'approved',
   REJECTED: 'rejected'
 };
 
 // User availability
-const USER_AVAILABILITY = {
+export const USER_AVAILABILITY = {
   AVAILABLE: 'Available',
   BUSY: 'Busy',
   UNAVAILABLE: 'Unavailable'
 };
 
 // Message types
-const MESSAGE_TYPES = {
+export const MESSAGE_TYPES = {
   MESSAGE: 'message',
   ANNOUNCEMENT: 'announcement',
   WARNING: 'warning',
@@ -37,27 +37,27 @@ const MESSAGE_TYPES = {
 };
 
 // Rating range
-const RATING_RANGE = {
+export const RATING_RANGE = {
   MIN: 1,
   MAX: 5
 };
 
 // File upload limits
-const FILE_LIMITS = {
+export const FILE_LIMITS = {
   MAX_SIZE: 5 * 1024 * 1024, // 5MB
   ALLOWED_TYPES: ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
   ALLOWED_EXTENSIONS: ['.jpg', '.jpeg', '.png', '.gif', '.webp']
 };
 
 // Pagination defaults
-const PAGINATION = {
+export const PAGINATION = {
   DEFAULT_PAGE: 1,
   DEFAULT_LIMIT: 10,
   MAX_LIMIT: 100
 };
 
 // Validation limits
-const VALIDATION_LIMITS = {
+export const VALIDATION_LIMITS = {
   NAME_MIN: 2,
   NAME_MAX: 50,
   EMAIL_MAX: 100,
@@ -78,20 +78,20 @@ const VALIDATION_LIMITS = {
 };
 
 // Rate limiting
-const RATE_LIMIT = {
+export const RATE_LIMIT = {
   WINDOW_MS: 15 * 60 * 1000, // 15 minutes
   MAX_REQUESTS: 100,
   MESSAGE: 'Too many requests from this IP, please try again later.'
 };
 
 // JWT settings
-const JWT_SETTINGS = {
+export const JWT_SETTINGS = {
   EXPIRES_IN: '7d',
   ALGORITHM: 'HS256'
 };
 
 // Skill categories (predefined)
-const SKILL_CATEGORIES = [
+export const SKILL_CATEGORIES = [
   'Programming',
   'Design',
   'Marketing',
@@ -112,7 +112,7 @@ const SKILL_CATEGORIES = [
 ];
 
 // Common skill names for search suggestions
-const COMMON_SKILLS = [
+export const COMMON_SKILLS = [
   'JavaScript', 'Python', 'Java', 'C++', 'HTML', 'CSS', 'React', 'Node.js',
   'Photoshop', 'Illustrator', 'Figma', 'Sketch', 'UI/UX Design',
   'SEO', 'Social Media Marketing', 'Content Writing', 'Copywriting',
@@ -128,7 +128,7 @@ const COMMON_SKILLS = [
 ];
 
 // Error messages
-const ERROR_MESSAGES = {
+export const ERROR_MESSAGES = {
   UNAUTHORIZED: 'Access denied. Please login.',
   FORBIDDEN: 'Access denied. Insufficient permissions.',
   NOT_FOUND: 'Resource not found.',
@@ -148,7 +148,7 @@ const ERROR_MESSAGES = {
 };
 
 // Success messages
-const SUCCESS_MESSAGES = {
+export const SUCCESS_MESSAGES = {
   USER_CREATED: 'User created successfully.',
   LOGIN_SUCCESS: 'Login successful.',
   PROFILE_UPDATED: 'Profile updated successfully.',
@@ -165,22 +165,4 @@ const SUCCESS_MESSAGES = {
   USER_UNBANNED: 'User unbanned successfully.',
   SKILL_APPROVED: 'Skill approved successfully.',
   SKILL_REJECTED: 'Skill rejected successfully.'
-};
-
-module.exports = {
-  USER_ROLES,
-  REQUEST_STATUS,
-  SKILL_STATUS,
-  USER_AVAILABILITY,
-  MESSAGE_TYPES,
-  RATING_RANGE,
-  FILE_LIMITS,
-  PAGINATION,
-  VALIDATION_LIMITS,
-  RATE_LIMIT,
-  JWT_SETTINGS,
-  SKILL_CATEGORIES,
-  COMMON_SKILLS,
-  ERROR_MESSAGES,
-  SUCCESS_MESSAGES
 };

@@ -17,7 +17,7 @@ const StatCard = ({ icon, title, value, color }) => (
 );
 
 const AdminPanel = () => {
-  const { setCurrentPage } = useNavigation();
+  const { navigate } = useNavigation();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -58,14 +58,14 @@ const AdminPanel = () => {
         <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
            <h2 className="text-2xl font-semibold text-cyan-400 mb-6">Admin Actions</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <button onClick={() => setCurrentPage('manage-users')} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-transform transform hover:scale-105">
+              <button onClick={() => navigate('manage-users')} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-transform transform hover:scale-105">
                 Manage Users
               </button>
               {/* --- NEW BUTTON ADDED HERE --- */}
-              <button onClick={() => setCurrentPage('moderate-skills')} className="bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-3 px-4 rounded-lg transition-transform transform hover:scale-105">
+              <button onClick={() => navigate('moderate-skills')} className="bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-3 px-4 rounded-lg transition-transform transform hover:scale-105">
                 Moderate Skills
               </button>
-              <button onClick={() => setCurrentPage('announcements')} className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg transition-transform transform hover:scale-105">
+              <button onClick={() => navigate('announcements')} className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg transition-transform transform hover:scale-105">
                 Announcements
               </button>
               <button onClick={() => alert('Export data page coming soon!')} className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg transition-transform transform hover:scale-105">

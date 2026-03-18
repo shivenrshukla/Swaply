@@ -3,7 +3,7 @@ import adminService from '../services/adminService';
 import { useNavigation } from '../context/NavigationContext';
 
 const Announcements = () => {
-  const {currentPage, setCurrentPage } = useNavigation();
+  const { navigate } = useNavigation();
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [message, setMessage] = useState('');
@@ -23,7 +23,7 @@ const Announcements = () => {
   return (
     <div className="text-gray-100 p-4 sm:p-8">
       <div className="max-w-4xl mx-auto">
-        <button onClick={() => setCurrentPage('admin')} className="text-blue-400 hover:text-blue-300 mb-4">
+        <button onClick={() => navigate('admin')} className="text-blue-400 hover:text-blue-300 mb-4">
           &larr; Back to Admin Dashboard
         </button>
         <h1 className="text-3xl font-bold text-cyan-300 mb-6">Send Announcement</h1>

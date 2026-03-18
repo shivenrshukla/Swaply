@@ -1,5 +1,5 @@
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
 
 // Generate random string for file names
 const generateRandomString = (length = 10) => {
@@ -218,7 +218,7 @@ const containsInappropriateContent = (text) => {
   return inappropriateWords.some(word => lowerText.includes(word));
 };
 
-module.exports = {
+export {
   generateRandomString,
   deleteFile,
   calculateAverageRating,

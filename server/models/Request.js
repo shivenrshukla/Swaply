@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const requestSchema = new mongoose.Schema({
   requester: {
@@ -140,4 +140,6 @@ requestSchema.statics.getRequestsForUser = function(userId, type = 'all') {
     .sort({ createdAt: -1 });
 };
 
-module.exports = mongoose.model('Request', requestSchema);
+const Request = mongoose.model('Request', requestSchema);
+
+export default Request;

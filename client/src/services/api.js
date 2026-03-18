@@ -1,4 +1,3 @@
-// src/services/api.js
 import axios from 'axios';
 
 const api = axios.create({
@@ -9,7 +8,6 @@ const api = axios.create({
   },
 });
 
-// The rest of the file (interceptor) remains exactly the same.
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');

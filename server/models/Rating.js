@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const ratingSchema = new mongoose.Schema({
   rater: {
@@ -37,4 +37,6 @@ const ratingSchema = new mongoose.Schema({
 // Ensure one rating per request per user
 ratingSchema.index({ rater: 1, request: 1 }, { unique: true });
 
-module.exports = mongoose.model('Rating', ratingSchema);
+const Rating = mongoose.model('Rating', ratingSchema);
+
+export default Rating;
