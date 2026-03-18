@@ -1,13 +1,10 @@
-import axios from 'axios';
-
-// Use the correct environment variable name here:
-const API = import.meta.env.VITE_API_BASE_URL + '/api/auth';
+import api from './api';
 
 // Login user with email & password
-const login = (credentials) => axios.post(`${API}/login`, credentials);
+const login = (credentials) => api.post('/api/auth/login', credentials);
 
 // Register new user with name, email & password
-const register = (userData) => axios.post(`${API}/register`, userData);
+const register = (userData) => api.post('/api/auth/register', userData);
 
 export default {
   login,

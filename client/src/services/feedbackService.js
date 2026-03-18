@@ -1,12 +1,10 @@
-import axios from 'axios';
-
-const API = import.meta.env.VITE_API_URL + '/api/feedback';
+import api from './api';
 
 // Submit new feedback
-const submitFeedback = (data) => axios.post(API, data);
+const submitFeedback = (data) => api.post('/api/feedback', data);
 
 // Get all feedback (admin or public depending on backend)
-const getAllFeedback = () => axios.get(API);
+const getAllFeedback = () => api.get('/api/feedback');
 
 export default {
   submitFeedback,

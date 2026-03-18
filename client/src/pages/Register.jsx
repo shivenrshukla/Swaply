@@ -1,14 +1,11 @@
-// src/pages/Register.jsx
 import { useState } from 'react'
-import axios from 'axios'
 import { useAuth } from '../context/AuthContext'
 import { useNavigation } from '../context/NavigationContext'
+import authService from '../services/authService'
 
 const Register = () => {
   const { login } = useAuth()
   const { navigate } = useNavigation()
-
-  const API_URL = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '')
 
   const [form, setForm] = useState({
     name: '',
@@ -28,7 +25,7 @@ const Register = () => {
     setError(null)
 
     try {
-      const res = await axios.post(`${API_URL}/api/auth/register`, form)
+      const res = await authService.register(form)
 
       // ✅ Set user and token in context (login handles localStorage too)
       login(res.data.user, res.data.token)

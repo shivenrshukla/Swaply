@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import axios from 'axios';
+import api from '../services/api';
 
 const Profile = () => {
   // only 4 variables are used in this component and not 6
-  const { user, updateUser, token, loading } = useAuth();
+  const { user, updateUser, loading } = useAuth();
 
   // Profile edit form state
   const [profileFormData, setProfileFormData] = useState({
@@ -83,16 +83,12 @@ const Profile = () => {
     setSuccess('')
   }
 
-  const API_URL = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '');
-  // token from context may be null if page was refreshed — fall back to localStorage
-  const authToken = token || localStorage.getItem('token');
   const handleProfileSubmit = async (e) => {
     e.preventDefault()
     try {
-      const res = await axios.put(
-        `${API_URL}/api/users/profile`,
+      const res = await api.put(
+        '/api/users/profile',
         profileFormData,
-        { headers: { Authorization: `Bearer ${authToken}` } }
       );
 
       setSuccess('Profile updated successfully!');
@@ -128,10 +124,9 @@ const Profile = () => {
   const handleSkillSubmit = async (e) => {
     e.preventDefault()
     try {
-      const res = await axios.post(
-        `${API_URL}/api/users/skills/offered`,
+      const res = await api.post(
+        '/api/users/skills/offered',
         skillFormData,
-        { headers: { Authorization: `Bearer ${authToken}` } }
       )
 
       setSuccess(res.data.message)
@@ -158,10 +153,9 @@ const Profile = () => {
   const handleWantedSkillSubmit = async (e) => {
     e.preventDefault()
     try {
-      const res = await axios.post(
-        `${API_URL}/api/users/skills/wanted`,
+      const res = await api.post(
+        '/api/users/skills/wanted',
         wantedSkillFormData,
-        { headers: { Authorization: `Bearer ${authToken}` } }
       )
 
       setSuccess(res.data.message)

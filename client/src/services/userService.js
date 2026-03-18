@@ -1,16 +1,11 @@
 // src/services/userService.js
-import axios from 'axios';
+import api from './api';
 
 const getAllUsers = async () => {
-  const token = localStorage.getItem('token') // Or use your auth context
-  const config = {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  }
-  return axios.get('/api/users', config)
+    // Interceptor in api.js handles Authorization header
+    return api.get('/api/users')
 };
 
 export default {
-  getAllUsers
+    getAllUsers
 };

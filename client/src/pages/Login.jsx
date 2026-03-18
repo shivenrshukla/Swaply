@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { useNavigation } from '../context/NavigationContext';
+import authService from '../services/authService';
 
 const Login = () => {
   const { login } = useAuth();
@@ -11,14 +11,12 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
 
-  const API_URL = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/$/, ""); // Remove trailing slash if any
-
   const handleLogin = async (e) => {
     e.preventDefault();
     setError(null);
 
     try {
-      const res = await axios.post(`${API_URL}/api/auth/login`, { email, password });
+      const res = await authService.login({ email, password });
 
       // ✅ Set user and token in context (login handles localStorage too)
       login(res.data.user, res.data.token);
@@ -83,7 +81,7 @@ const Login = () => {
 
         <p className="text-sm text-center mt-8 text-gray-400">
           Don't have an account?{' '}
-          <button 
+          <button
             onClick={() => navigate('register')}
             className="text-cyan-400 underline hover:text-cyan-500 transition"
           >

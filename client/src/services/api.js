@@ -1,8 +1,8 @@
 import axios from 'axios';
+import { API_BASE_URL } from '../utils/constants';
 
 const api = axios.create({
-  // Axios will make requests to relative paths (e.g., '/api/stats'),
-  // and Vite will proxy them correctly.
+  baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
