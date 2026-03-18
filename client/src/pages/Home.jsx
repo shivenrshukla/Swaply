@@ -60,7 +60,7 @@ const Home = () => {
     <div className="min-h-screen bg-gradient-to-br from-gray-800 via-blue-gray-900 to-gray-900 text-gray-100 relative overflow-x-hidden">
       <header className="py-28 text-center relative z-20 px-6 max-w-4xl mx-auto">
         <h1 className="text-6xl sm:text-7xl font-semibold tracking-tight bg-gradient-to-r from-blue-400 via-blue-300 to-cyan-400 bg-clip-text text-transparent select-none animate-subtleTilt">
-          SkillSwap
+          Swaply
         </h1>
         <div className="mx-auto mt-4 mb-8 w-20 h-1 bg-blue-400 rounded-full shadow-lg"></div>
         <p className="max-w-xl mx-auto text-lg sm:text-xl font-light tracking-wide text-blue-300 animate-gradientShift">

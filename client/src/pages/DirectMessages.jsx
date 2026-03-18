@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useNavigation } from '../context/NavigationContext';
 import io from 'socket.io-client';
 import axios from 'axios';
 
 const DirectMessages = () => {
   const { user } = useAuth();
+  const { pageParams } = useNavigation();
   const [socket, setSocket] = useState(null);
   const [conversations, setConversations] = useState([]);
   const [selectedConv, setSelectedConv] = useState(null); // { _id, name }
@@ -30,7 +32,9 @@ const DirectMessages = () => {
     });
 
     sock.on('receive_message', (msg) => {
-      // Show incoming real-time message if in the same conversation
+      const isForMe = msg.recipient === user._id || msg.recipient?._id === user._id;
+  
+      if (!isForMe) return;
       setSelectedConv(prev => {
         if (prev && (msg.sender === prev._id || msg.sender?._id === prev._id)) {
           setMessages(prevMsgs => [...prevMsgs, msg]);
@@ -45,9 +49,17 @@ const DirectMessages = () => {
     sock.on('user_offline', (id) => setOnlineUsers(prev => { const s = new Set(prev); s.delete(id); return s; }));
 
     loadConversations();
+    
+    // Auto-select conversation if passed via navigation params
+    if (pageParams && (pageParams._id || pageParams.id)) {
+      setSelectedConv({
+        _id: pageParams._id || pageParams.id,
+        name: pageParams.name || 'User'
+      });
+    }
 
     return () => sock.disconnect();
-  }, [user._id]);
+  }, [user._id, pageParams]);
 
   // ── Scroll to bottom on new message ──────────────────────────────────────
   useEffect(() => {

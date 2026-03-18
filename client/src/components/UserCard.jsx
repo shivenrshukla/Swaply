@@ -1,4 +1,7 @@
+import { useNavigation } from '../context/NavigationContext';
+
 const UserCard = ({ user, onRequestSwap, className = '' }) => {
+  const { navigate } = useNavigation();
   return (
     <div
       className={`bg-gradient-to-br from-gray-800 to-blue-gray-900 border border-blue-700 rounded-2xl shadow-lg p-6 flex flex-col items-center text-center transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:shadow-cyan-500/30 hover:border-cyan-400 ${className}`}
@@ -72,12 +75,21 @@ const UserCard = ({ user, onRequestSwap, className = '' }) => {
         </p>
       )}
 
-      <button
-        onClick={() => onRequestSwap(user)}
-        className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-semibold px-6 py-3 rounded-full shadow-lg transition-all duration-300 transform hover:scale-105 active:scale-95"
-      >
-        Request Swap
-      </button>
+      <div className="flex gap-3 w-full">
+        <button
+          onClick={() => onRequestSwap(user)}
+          className="flex-1 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-semibold py-3 rounded-full shadow-lg transition-all duration-300 transform hover:scale-105 active:scale-95"
+        >
+          Request Swap
+        </button>
+        <button
+          onClick={() => navigate('direct-messages', { _id: user._id, name: user.name })}
+          className="bg-gray-700 hover:bg-gray-600 text-white font-semibold px-4 py-3 rounded-full shadow-lg transition-all duration-300 transform hover:scale-105 active:scale-95 flex items-center justify-center border border-blue-500/30"
+          title="Send Message"
+        >
+          💬
+        </button>
+      </div>
     </div>
   )
 }

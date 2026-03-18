@@ -309,7 +309,10 @@ const SwapMatches = () => {
                         {actionLoading[match._id] ? 'Loading...' : 'Cancel'}
                       </button>
                       <button
-                        onClick={() => navigate('chat', { matchId: match._id })}
+                        onClick={() => navigate('direct-messages', { 
+                          _id: otherParticipant.user._id, 
+                          name: otherParticipant.user.name 
+                        })}
                         disabled={actionLoading[match._id]}
                         className="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white font-semibold px-4 py-2 rounded-lg"
                       >

@@ -1,9 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import io from 'socket.io-client';
+import { useNavigation } from '../context/NavigationContext';
 
 const Chat = () => {
   const { user } = useAuth();
+  const { navigate } = useNavigation();
   const [socket, setSocket] = useState(null);
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState([]);
@@ -184,11 +186,22 @@ const Chat = () => {
               <h3 className="text-white font-semibold mb-4">Active Users ({activeUsers.length})</h3>
               <div className="space-y-2">
                 {activeUsers.map((u, index) => (
-                  <div key={index} className="flex items-center gap-2 text-gray-300">
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <span className={u.userId === user._id ? 'font-semibold text-blue-400' : ''}>
-                      {u.username} {u.userId === user._id && '(You)'}
-                    </span>
+                  <div key={index} className="flex items-center justify-between group">
+                    <div className="flex items-center gap-2 text-gray-300">
+                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                      <span className={u.userId === user._id ? 'font-semibold text-blue-400' : ''}>
+                        {u.username} {u.userId === user._id && '(You)'}
+                      </span>
+                    </div>
+                    {u.userId !== user._id && (
+                      <button
+                        onClick={() => navigate('direct-messages', { _id: u.userId, name: u.username })}
+                        className="text-gray-500 hover:text-blue-400 opacity-0 group-hover:opacity-100 transition-all"
+                        title={`Message ${u.username}`}
+                      >
+                        💬
+                      </button>
+                    )}
                   </div>
                 ))}
               </div>
