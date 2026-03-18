@@ -83,7 +83,7 @@ const Profile = () => {
     setSuccess('')
   }
 
-  const API_URL = import.meta.env.VITE_API_BASE_URL.replace(/\/$/, '');
+  const API_URL = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '');
   // token from context may be null if page was refreshed — fall back to localStorage
   const authToken = token || localStorage.getItem('token');
   const handleProfileSubmit = async (e) => {

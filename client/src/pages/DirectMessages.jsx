@@ -18,7 +18,7 @@ const DirectMessages = () => {
   const [sending, setSending] = useState(false);
   const messagesEndRef = useRef(null);
 
-  const API_URL = import.meta.env.VITE_API_BASE_URL.replace(/\/$/, '');
+  const API_URL = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '');
   const token = localStorage.getItem('token');
   const authHeaders = { Authorization: `Bearer ${token}` };
 

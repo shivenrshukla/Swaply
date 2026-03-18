@@ -8,7 +8,7 @@ const Register = () => {
   const { login } = useAuth()
   const { navigate } = useNavigation()
 
-  const API_URL = import.meta.env.VITE_API_BASE_URL.replace(/\/$/, '')
+  const API_URL = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '')
 
   const [form, setForm] = useState({
     name: '',
