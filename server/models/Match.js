@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const sessionSchema = new mongoose.Schema({
   date: {
@@ -222,4 +222,4 @@ matchSchema.statics.getActiveMatchesCount = function(userId) {
   });
 };
 
-module.exports = mongoose.model('Match', matchSchema);
+export default mongoose.model('Match', matchSchema);

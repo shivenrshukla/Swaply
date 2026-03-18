@@ -1,4 +1,3 @@
-// services/announcementService.js
 export const announcementService = {
   // Get all announcements for current user
   async getAnnouncements() {

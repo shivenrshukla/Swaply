@@ -1,297 +1,203 @@
-import { useEffect, useState } from 'react'
-import chatService from '../services/chatService'
-import swapService from '../services/swapService'
-import { useAuth } from '../context/AuthContext'
-import { useSocket } from '../context/SocketContext'
-import { useNavigation } from '../context/NavigationContext'
-import ChatWindow from '../components/ChatWindow'
-import ErrorBoundary from '../components/ErrorBoundary'
+import { useState, useEffect, useRef } from 'react';
+import { useAuth } from '../context/AuthContext';
+import io from 'socket.io-client';
 
 const Chat = () => {
-  const { user } = useAuth()
-  const socket = useSocket()
-  const { pageParams } = useNavigation()
+  const { user } = useAuth();
+  const [socket, setSocket] = useState(null);
+  const [message, setMessage] = useState('');
+  const [messages, setMessages] = useState([]);
+  const [activeUsers, setActiveUsers] = useState([]);
+  const [typingUsers, setTypingUsers] = useState(new Set());
+  const [room] = useState('general');
+  const messagesEndRef = useRef(null);
+  const typingTimeoutRef = useRef(null);
 
-  const [conversations, setConversations] = useState([])
-  const [selectedUser, setSelectedUser] = useState(null)
-  const [messages, setMessages] = useState([])
-  const [matches, setMatches] = useState([]) // Add this for available matches
-  const [showNewChatModal, setShowNewChatModal] = useState(false) // Modal state
-
-  // Load conversations on mount
   useEffect(() => {
-    const fetchConversations = async () => {
-      try {
-        const res = await chatService.getMyChats()
-        const chatList = Array.isArray(res.data) ? res.data : res.data.conversations || []
-        setConversations(chatList)
-      } catch (err) {
-        console.error('❌ Error fetching chats:', err)
-        setConversations([])
-      }
-    }
-    fetchConversations()
-  }, [])
+    const newSocket = io(import.meta.env.VITE_API_BASE_URL || 'http://localhost:8001');
+    setSocket(newSocket);
 
-  // Load available matches for starting new chats
-  useEffect(() => {
-    const fetchMatches = async () => {
-      try {
-        const response = await swapService.getMatches('active')
-        const matchesArray = response.matches || []
-        setMatches(matchesArray)
-      } catch (err) {
-        console.error('❌ Error fetching matches:', err)
-      }
-    }
-    fetchMatches()
-  }, [])
+    newSocket.on('connect', () => {
+      console.log('Connected to server');
+      newSocket.emit('join', {
+        username: user.name,
+        userId: user._id || user.id,
+        room: room
+      });
+    });
 
-  // Auto-open chat if matchId is passed via pageParams or localStorage
-  useEffect(() => {
-    if (!conversations.length) return
+    newSocket.on('previousMessages', (msgs) => {
+      setMessages(msgs);
+    });
 
-    const matchId = pageParams?.matchId || localStorage.getItem("activeChatMatchId")
-    
-    if (!matchId) return
+    newSocket.on('message', (msg) => {
+      setMessages(prev => [...prev, msg]);
+    });
 
-    const conv = conversations.find((c) => c._id === matchId)
-    if (conv) {
-      const other = conv.participants?.find((p) => p._id !== user._id)
-      if (other) {
-        openChat(other)
-        localStorage.removeItem("activeChatMatchId")
-      }
-    } else {
-      // Try to create conversation from match
-      createConversationFromMatch(matchId)
-    }
-  }, [pageParams, conversations, user])
+    newSocket.on('userJoined', (data) => {
+      setMessages(prev => [...prev, {
+        system: true,
+        message: data.message,
+        timestamp: data.timestamp
+      }]);
+    });
 
-  // Listen for incoming socket messages
-  useEffect(() => {
-    if (!socket) return
+    newSocket.on('userLeft', (data) => {
+      setMessages(prev => [...prev, {
+        system: true,
+        message: data.message,
+        timestamp: data.timestamp
+      }]);
+    });
 
-    const handleReceiveMessage = (msg) => {
-    // Correctly compare the sender's ID from the populated object
-      if (msg.sender?._id === selectedUser?._id) {
-        setMessages((prev) => [...prev, msg]);
-      }
+    newSocket.on('activeUsers', (users) => {
+      setActiveUsers(users);
+    });
+
+    newSocket.on('userTyping', (username) => {
+      setTypingUsers(prev => new Set([...prev, username]));
+    });
+
+    newSocket.on('userStoppedTyping', (username) => {
+      setTypingUsers(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(username);
+        return newSet;
+      });
+    });
+
+    return () => {
+      newSocket.emit('leave_room');
+      newSocket.disconnect();
     };
+  }, [user, room]);
 
-    socket.on('receive_message', handleReceiveMessage)
-    return () => socket.off('receive_message', handleReceiveMessage)
-  }, [socket, selectedUser])
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
-  const openChat = async (otherUser) => {
-    setSelectedUser(otherUser)
-    try {
-      const res = await chatService.getMessagesWith(otherUser._id)
-      setMessages(res.data || [])
-    } catch (err) {
-      console.error('❌ Error loading chat:', err)
-      setMessages([])
+  const handleSendMessage = (e) => {
+    e.preventDefault();
+    if (message.trim() && socket) {
+      socket.emit('sendMessage', { message: message.trim() });
+      setMessage('');
+      socket.emit('stopTyping');
     }
-  }
+  };
 
-  const sendMessage = async (text) => {
-    if (!text.trim()) return
-    const msg = { sender: user._id, recipient: selectedUser._id, text }
-
-    try {
-      const res = await chatService.sendMessage(msg)
-      setMessages((prev) => [...prev, res.data])
-      socket.emit('send_message', res.data)
-    } catch (err) {
-      console.error('❌ Message send failed:', err)
-    }
-  }
-
-  // Create conversation from match
-  const createConversationFromMatch = async (matchId) => {
-    try {
-      const match = matches.find(m => m._id === matchId)
-      if (!match) {
-        console.warn('⚠️ Match not found:', matchId)
-        return
-      }
-
-      const otherParticipant = match.participants?.find(p => p.user?._id !== user._id)
-      if (otherParticipant) {
-        await startChatWithUser(otherParticipant.user)
-        localStorage.removeItem("activeChatMatchId")
-      }
-    } catch (err) {
-      console.error('❌ Error creating conversation from match:', err)
-    }
-  }
-
-  // Start chat with a specific user
-  const startChatWithUser = async (otherUser) => {
-    try {
-      // Try to create/get conversation
-      await chatService.createOrGetConversation?.(otherUser._id)
+  const handleTyping = (e) => {
+    setMessage(e.target.value);
+    
+    if (socket) {
+      socket.emit('typing');
       
-      // Refresh conversations
-      const updatedChats = await chatService.getMyChats()
-      const chatList = Array.isArray(updatedChats.data) ? updatedChats.data : updatedChats.data.conversations || []
-      setConversations(chatList)
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
       
-      // Open the chat
-      openChat(otherUser)
-      setShowNewChatModal(false)
-    } catch (err) {
-      console.error('❌ Error starting chat:', err)
-      // If API doesn't exist, just open chat directly
-      openChat(otherUser)
-      setShowNewChatModal(false)
+      typingTimeoutRef.current = setTimeout(() => {
+        socket.emit('stopTyping');
+      }, 1000);
     }
-  }
+  };
 
-  // Get users from matches who don't have active conversations
-  const getAvailableUsersForChat = () => {
-    const existingChatUsers = conversations.map(conv => 
-      conv.participants?.find(p => p._id !== user._id)?._id
-    ).filter(Boolean)
-
-    return matches
-      .map(match => match.participants?.find(p => p.user?._id !== user._id)?.user)
-      .filter(matchUser => matchUser && !existingChatUsers.includes(matchUser._id))
-  }
-
-  const availableUsers = getAvailableUsersForChat()
+  const formatTime = (timestamp) => {
+    return new Date(timestamp).toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
 
   return (
-    <div className="flex h-screen bg-gradient-to-br from-gray-800 via-blue-gray-900 to-gray-900 text-gray-100">
-      {/* Sidebar */}
-      <div className="w-1/3 border-r border-gray-700 bg-gray-900/60 backdrop-blur-sm p-4 overflow-y-auto">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-semibold text-blue-300 animate-subtleTilt">💬 Conversations</h2>
-          <button
-            onClick={() => setShowNewChatModal(true)}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200"
-          >
-            + New Chat
-          </button>
-        </div>
+    <div className="container mx-auto px-4 py-8">
+      <div className="max-w-6xl mx-auto">
+        <div className="bg-gray-800 rounded-lg shadow-xl overflow-hidden">
+          <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-4">
+            <h2 className="text-2xl font-bold text-white">Chat Room - {room}</h2>
+          </div>
 
-        {/* New Chat Modal */}
-        {showNewChatModal && (
-          <div className="mb-6 p-4 bg-gray-800/80 rounded-lg border border-blue-500/30 backdrop-blur-sm">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-lg font-semibold text-cyan-300">Start New Chat</h3>
-              <button
-                onClick={() => setShowNewChatModal(false)}
-                className="text-gray-400 hover:text-white text-xl"
-              >
-                ×
-              </button>
-            </div>
-            
-            <p className="text-sm text-gray-400 mb-3">Chat with your matched partners:</p>
-            
-            {availableUsers.length > 0 ? (
-              <div className="max-h-48 overflow-y-auto">
-                {availableUsers.map(matchUser => (
-                  <div
-                    key={matchUser._id}
-                    onClick={() => startChatWithUser(matchUser)}
-                    className="p-3 mb-2 bg-gray-700 hover:bg-gray-600 rounded cursor-pointer transition-colors duration-200 flex items-center gap-3"
+          <div className="flex h-[600px]">
+            {/* Main Chat Area */}
+            <div className="flex-1 flex flex-col">
+              {/* Messages Area */}
+              <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-900">
+                {messages.map((msg, index) => (
+                  <div key={index}>
+                    {msg.system ? (
+                      <div className="text-center text-gray-400 text-sm italic">
+                        {msg.message}
+                      </div>
+                    ) : (
+                      <div className={`flex ${msg.userId === user._id ? 'justify-end' : 'justify-start'}`}>
+                        <div className={`max-w-xs lg:max-w-md xl:max-w-lg ${
+                          msg.userId === user._id 
+                            ? 'bg-blue-600' 
+                            : 'bg-gray-700'
+                        } rounded-lg p-3`}>
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="font-semibold text-white text-sm">
+                              {msg.username}
+                            </span>
+                            <span className="text-xs text-gray-300">
+                              {formatTime(msg.timestamp)}
+                            </span>
+                          </div>
+                          <p className="text-white break-words">{msg.message}</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+                <div ref={messagesEndRef} />
+              </div>
+
+              {/* Typing Indicator */}
+              {typingUsers.size > 0 && (
+                <div className="px-4 py-2 bg-gray-800 text-gray-400 text-sm">
+                  {Array.from(typingUsers).join(', ')} {typingUsers.size === 1 ? 'is' : 'are'} typing...
+                </div>
+              )}
+
+              {/* Message Input */}
+              <form onSubmit={handleSendMessage} className="p-4 bg-gray-800 border-t border-gray-700">
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={message}
+                    onChange={handleTyping}
+                    placeholder="Type a message..."
+                    className="flex-1 bg-gray-700 text-white rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <button
+                    type="submit"
+                    disabled={!message.trim()}
+                    className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-6 py-2 rounded-lg font-semibold transition-colors"
                   >
-                    <img
-                      src={matchUser.avatar || `https://placehold.co/32x32/1e293b/e2e8f0?text=${matchUser.name?.charAt(0) || '?'}`}
-                      alt={matchUser.name}
-                      className="w-8 h-8 rounded-full"
-                    />
-                    <div>
-                      <p className="font-semibold text-white">{matchUser.name}</p>
-                      <p className="text-xs text-gray-400">Start chatting</p>
-                    </div>
+                    Send
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            {/* Active Users Sidebar */}
+            <div className="w-64 bg-gray-800 border-l border-gray-700 p-4">
+              <h3 className="text-white font-semibold mb-4">Active Users ({activeUsers.length})</h3>
+              <div className="space-y-2">
+                {activeUsers.map((u, index) => (
+                  <div key={index} className="flex items-center gap-2 text-gray-300">
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    <span className={u.userId === user._id ? 'font-semibold text-blue-400' : ''}>
+                      {u.username} {u.userId === user._id && '(You)'}
+                    </span>
                   </div>
                 ))}
               </div>
-            ) : (
-              <p className="text-gray-400 text-sm">No new matches available to chat with.</p>
-            )}
-          </div>
-        )}
-
-        {/* Existing Conversations */}
-        {conversations.length > 0 ? (
-          conversations.map((conv) => {
-            const other = conv.participants?.find((p) => p._id !== user._id)
-            if (!other) return null
-            return (
-              <div
-                key={conv._id}
-                onClick={() => openChat(other)}
-                className={`p-4 mb-3 rounded-lg cursor-pointer transition-all duration-300 ${
-                  selectedUser?._id === other._id
-                    ? 'bg-blue-600 text-white shadow-lg'
-                    : 'bg-gray-800 hover:bg-gray-700'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <img
-                    src={other.avatar || `https://placehold.co/40x40/1e293b/e2e8f0?text=${other.name?.charAt(0) || '?'}`}
-                    alt={other.name}
-                    className="w-10 h-10 rounded-full"
-                  />
-                  <div className="flex-1">
-                    <p className="font-semibold">{other.name}</p>
-                    <p className="text-sm text-gray-400 truncate">
-                      {conv.lastMessage?.text || 'No messages yet'}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )
-          })
-        ) : (
-          <div className="text-center py-8">
-            <div className="text-4xl mb-2">💬</div>
-            <p className="text-gray-400">No conversations yet</p>
-            <p className="text-sm text-gray-500">Click "New Chat" to start!</p>
-          </div>
-        )}
-      </div>
-
-      {/* Chat Window */}
-      <div className="w-2/3 bg-white h-full">
-        {selectedUser ? (
-          <ErrorBoundary>
-            <ChatWindow
-              currentUser={user}
-              otherUser={selectedUser}
-              messages={messages}
-              onSendMessage={sendMessage}
-            />
-          </ErrorBoundary>
-        ) : (
-          <div className="flex items-center justify-center h-full text-gray-500 text-lg">
-            <div className="text-center">
-              <div className="text-6xl mb-4">💬</div>
-              <p className="text-xl mb-2">Select a conversation to start chatting</p>
-              <p className="text-sm">Or click "New Chat" to start a conversation with a match</p>
             </div>
           </div>
-        )}
+        </div>
       </div>
-
-      <style>{`
-        @keyframes subtleTilt {
-          0%, 100% { transform: rotateX(0deg) rotateY(0deg); }
-          50% { transform: rotateX(2deg) rotateY(2deg); }
-        }
-        .animate-subtleTilt {
-          animation: subtleTilt 12s ease-in-out infinite;
-          display: inline-block;
-        }
-      `}</style>
     </div>
-  )
-}
+  );
+};
 
-export default Chat
-
-
+export default Chat;

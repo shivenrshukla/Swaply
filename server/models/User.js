@@ -1,5 +1,6 @@
-const mongoose = require('mongoose');
-const bcrypt = require('bcrypt');
+import mongoose from 'mongoose';
+import bcrypt from 'bcrypt';
+import Rating from './Rating.js';
 
 const userSchema = new mongoose.Schema({
   name: {
@@ -136,7 +137,6 @@ userSchema.methods.comparePassword = async function(candidatePassword) {
 
 // Update average rating
 userSchema.methods.updateAverageRating = async function() {
-  const Rating = require('./Rating');
   const ratings = await Rating.find({ ratedUser: this._id });
   
   if (ratings.length === 0) {
@@ -151,4 +151,6 @@ userSchema.methods.updateAverageRating = async function() {
   await this.save();
 };
 
-module.exports = mongoose.model('User', userSchema);
+const User = mongoose.model('User', userSchema);
+
+export default User;

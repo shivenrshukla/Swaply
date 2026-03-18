@@ -1,8 +1,8 @@
-const express = require('express');
-const multer = require('multer');
-const { body, validationResult } = require('express-validator');
-const User = require('../models/User');
-const auth = require('../middleware/auth');
+import express from 'express';
+import multer from 'multer';
+import { body, validationResult } from 'express-validator';
+import User from '../models/User.js'
+import auth from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -191,20 +191,6 @@ router.post('/skills/wanted', [
   }
 });
 
-// Remove skill offered
-router.delete('/skills/offered/:skillId', auth, async (req, res) => {
-  try {
-    const user = await User.findById(req.user._id);
-    user.skillsOffered = user.skillsOffered.filter(skill => skill._id.toString() !== req.params.skillId);
-    await user.save();
-
-    res.json({ message: 'Skill removed successfully' });
-  } catch (error) {
-    console.error('Remove skill error:', error);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
-
 // Remove skill wanted
 router.delete('/skills/wanted/:skillId', auth, async (req, res) => {
   try {
@@ -219,4 +205,4 @@ router.delete('/skills/wanted/:skillId', auth, async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

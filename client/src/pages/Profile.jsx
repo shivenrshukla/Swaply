@@ -4,15 +4,14 @@ import axios from 'axios';
 
 const Profile = () => {
   // only 4 variables are used in this component and not 6
-  const { user, setUser, token, loading } = useAuth();
-  const [currentUser, setCurrentUser] = useState(user);
+  const { user, updateUser, token, loading } = useAuth();
 
   // Profile edit form state
   const [profileFormData, setProfileFormData] = useState({
-    name: currentUser?.name || '',
-    location: currentUser?.location || '',
-    availability: currentUser?.availability || 'Available',
-    isPublic: currentUser?.isPublic || true
+    name: user?.name || '',
+    location: user?.location || '',
+    availability: user?.availability || 'Available',
+    isPublic: user?.isPublic || true
   });
   const [isEditingProfile, setIsEditingProfile] = useState(false);
 
@@ -32,22 +31,22 @@ const Profile = () => {
   
   const [errors, setErrors] = useState({});
   const [success, setSuccess] = useState('');
-  const [offeredSkills, setOfferedSkills] = useState(currentUser?.skillsOffered || []);
-  const [wantedSkills, setWantedSkills] = useState(currentUser?.skillsWanted || []);
+  const [offeredSkills, setOfferedSkills] = useState(user?.skillsOffered || []);
+  const [wantedSkills, setWantedSkills] = useState(user?.skillsWanted || []);
 
   // Update form data when user data changes
   useEffect(() => {
-    if (currentUser) {
+    if (user) {
       setProfileFormData({
-        name: currentUser.name || '',
-        location: currentUser.location || '',
-        availability: currentUser.availability || 'Available',
-        isPublic: currentUser.isPublic ?? true
+        name: user.name || '',
+        location: user.location || '',
+        availability: user.availability || 'Available',
+        isPublic: user.isPublic ?? true
       });
-      setOfferedSkills(currentUser.skillsOffered || []);
-      setWantedSkills(currentUser.skillsWanted || []);
+      setOfferedSkills(user.skillsOffered || []);
+      setWantedSkills(user.skillsWanted || []);
     }
-  }, [currentUser]);
+  }, [user]);
 
   if (loading) {
     return (
@@ -57,7 +56,7 @@ const Profile = () => {
     )
   }
 
-  if (!currentUser) {
+  if (!user) {
     return (
       <div className="flex items-center justify-center h-screen bg-gradient-to-br from-gray-800 via-blue-gray-900 to-gray-900 text-gray-200">
         <p className="text-lg animate-pulse">You must be logged in to view this page.</p>
@@ -84,24 +83,25 @@ const Profile = () => {
     setSuccess('')
   }
 
-  const API_URL = import.meta.env.VITE_API_BASE_URL;
+  const API_URL = import.meta.env.VITE_API_BASE_URL.replace(/\/$/, '');
+  // token from context may be null if page was refreshed — fall back to localStorage
+  const authToken = token || localStorage.getItem('token');
   const handleProfileSubmit = async (e) => {
     e.preventDefault()
     try {
       const res = await axios.put(
-        `${API_URL}api/users/profile`,
+        `${API_URL}/api/users/profile`,
         profileFormData,
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${authToken}` } }
       );
 
       setSuccess('Profile updated successfully!');
       
       // Update both local state and context
       const updatedUser = res.data.user;
-      setCurrentUser(updatedUser);
       
-      if (setUser) {
-        setUser(updatedUser)
+      if (updateUser && updatedUser) {
+        updateUser(updatedUser)
       }
       
       // Always exit edit mode
@@ -111,11 +111,17 @@ const Profile = () => {
       setErrors({});
       
     } catch (err) {
-      const msg = err.response?.data?.errors || err.response?.data?.message;
-      setErrors(typeof msg === 'string' ? { global: msg } : msg.reduce((acc, cur) => {
-        acc[cur.param] = cur.msg
-        return acc
-      }, {}));
+      const msg = err.response?.data?.errors ||[];
+      const message = err.response?.data?.message;
+
+      if (message) {
+        setErrors({global: message});
+      } else {
+        setErrors(typeof msg === 'string' ? { global: msg } : msg.reduce((acc, cur) => {
+          acc[cur.param] = cur.msg
+          return acc
+        }, {}));
+      }
     }
   }
 
@@ -123,9 +129,9 @@ const Profile = () => {
     e.preventDefault()
     try {
       const res = await axios.post(
-        '/api/users/skills/offered',
+        `${API_URL}/api/users/skills/offered`,
         skillFormData,
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${authToken}` } }
       )
 
       setSuccess(res.data.message)
@@ -135,11 +141,17 @@ const Profile = () => {
       }]);
       setSkillFormData({ name: '', description: '', level: 'Beginner' });
     } catch (err) {
-      const msg = err.response?.data?.errors || err.response?.data?.message
-      setErrors(typeof msg === 'string' ? { global: msg } : msg.reduce((acc, cur) => {
-        acc[cur.param] = cur.msg
-        return acc
-      }, {}));
+      const msg = err.response?.data?.errors ||[];
+      const message = err.response?.data?.message;
+
+      if (message) {
+        setErrors({global: message});
+      } else {
+        setErrors(typeof msg === 'string' ? { global: msg } : msg.reduce((acc, cur) => {
+          acc[cur.param] = cur.msg
+          return acc
+        }, {}));
+      }
     }
   }
 
@@ -147,9 +159,9 @@ const Profile = () => {
     e.preventDefault()
     try {
       const res = await axios.post(
-        `${API_URL}api/users/skills/wanted`,
+        `${API_URL}/api/users/skills/wanted`,
         wantedSkillFormData,
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${authToken}` } }
       )
 
       setSuccess(res.data.message)
@@ -159,21 +171,27 @@ const Profile = () => {
       }]);
       setWantedSkillFormData({ name: '', description: '', urgency: 'Low' });
     } catch (err) {
-      const msg = err.response?.data?.errors || err.response?.data?.message
-      setErrors(typeof msg === 'string' ? { global: msg } : msg.reduce((acc, cur) => {
-        acc[cur.param] = cur.msg
-        return acc
-      }, {}));
+      const msg = err.response?.data?.errors ||[];
+      const message = err.response?.data?.message;
+
+      if (message) {
+        setErrors({global: message});
+      } else {
+        setErrors(typeof msg === 'string' ? { global: msg } : msg.reduce((acc, cur) => {
+          acc[cur.param] = cur.msg
+          return acc
+        }, {}));
+      }
     }
   }
 
   const cancelEdit = () => {
     setIsEditingProfile(false);
     setProfileFormData({
-      name: currentUser?.name || '',
-      location: currentUser?.location || '',
-      availability: currentUser?.availability || 'Available',
-      isPublic: currentUser?.isPublic ?? true
+      name: user?.name || '',
+      location: user?.location || '',
+      availability: user?.availability || 'Available',
+      isPublic: user?.isPublic ?? true
     });
     setErrors({});
     setSuccess('');
@@ -193,23 +211,23 @@ const Profile = () => {
             <>
               <div>
                 <h2 className="text-lg font-semibold text-blue-400">Name:</h2>
-                <p className="text-base">{currentUser.name}</p>
+                <p className="text-base">{user.name}</p>
               </div>
               <div>
                 <h2 className="text-lg font-semibold text-blue-400">Email:</h2>
-                <p className="text-base">{currentUser.email}</p>
+                <p className="text-base">{user.email}</p>
               </div>
               <div>
                 <h2 className="text-lg font-semibold text-blue-400">Location:</h2>
-                <p className="text-base">{currentUser.location}</p>
+                <p className="text-base">{user.location}</p>
               </div>
               <div>
                 <h2 className="text-lg font-semibold text-blue-400">Availability:</h2>
-                <p className="text-base">{currentUser.availability}</p>
+                <p className="text-base">{user.availability}</p>
               </div>
               <div>
                 <h2 className="text-lg font-semibold text-blue-400">Profile Visibility:</h2>
-                <p className="text-base">{currentUser.isPublic ? 'Public' : 'Private'}</p>
+                <p className="text-base">{user.isPublic ? 'Public' : 'Private'}</p>
               </div>
               
               <button

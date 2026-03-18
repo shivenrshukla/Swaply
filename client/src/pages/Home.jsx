@@ -1,4 +1,3 @@
-// src/pages/Home.jsx
 import { useEffect, useState } from 'react';
 import userService from '../services/userService';
 import swapService from '../services/swapService';

@@ -1,7 +1,7 @@
-const { body, validationResult } = require('express-validator');
+import { body, validationResult } from 'express-validator';
 
 // Validation middleware
-const validate = (req, res, next) => {
+export const validate = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({
@@ -13,7 +13,7 @@ const validate = (req, res, next) => {
 };
 
 // User registration validation
-const validateUserRegistration = [
+export const validateUserRegistration = [
   body('name')
     .trim()
     .isLength({ min: 2, max: 50 })
@@ -32,8 +32,19 @@ const validateUserRegistration = [
   validate
 ];
 
+// User password change
+export const validateChangePassword = [
+  body('currentPassword')
+    .exists()
+    .withMessage('Current password is required'),
+  body('newPassword')
+    .isLength({ min: 6 })
+    .withMessage('New password must be at least 6 characters'),
+  validate
+];
+
 // User login validation
-const validateUserLogin = [
+export const validateUserLogin = [
   body('email')
     .isEmail()
     .normalizeEmail()
@@ -45,7 +56,7 @@ const validateUserLogin = [
 ];
 
 // Skill validation
-const validateSkill = [
+export const validateSkill = [
   body('name')
     .trim()
     .isLength({ min: 2, max: 50 })
@@ -62,38 +73,52 @@ const validateSkill = [
 ];
 
 // Request validation
-const validateRequest = [
-  body('skillOffered')
+export const validateRequest = [
+  body('recipientId')
+    .isMongoId()
+    .withMessage('Valid recipient ID is required'),
+  body('skillToOffer')
     .trim()
     .isLength({ min: 2, max: 100 })
-    .withMessage('Skill offered must be between 2 and 100 characters'),
-  body('skillWanted')
+    .withMessage('Skill to offer must be between 2 and 100 characters'),
+  body('skillToRequest')
     .trim()
     .isLength({ min: 2, max: 100 })
-    .withMessage('Skill wanted must be between 2 and 100 characters'),
+    .withMessage('Skill to request must be between 2 and 100 characters'),
   body('message')
     .optional()
     .trim()
     .isLength({ max: 500 })
     .withMessage('Message must be less than 500 characters'),
+  body('proposedDuration')
+    .trim()
+    .isLength({ min: 1, max: 100 })
+    .withMessage('Proposed duration is required'),
+  body('proposedSchedule')
+    .trim()
+    .isLength({ min: 1, max: 200 })
+    .withMessage('Proposed schedule is required'),
   validate
 ];
 
 // Rating validation
-const validateRating = [
+export const validateRating = [
+  body('requestId')
+    .isMongoId()
+    .withMessage('Valid request ID is required'),
   body('rating')
     .isInt({ min: 1, max: 5 })
     .withMessage('Rating must be between 1 and 5'),
   body('feedback')
     .optional()
     .trim()
-    .isLength({ max: 500 })
-    .withMessage('Feedback must be less than 500 characters'),
+    .isLength({ min: 10, max: 500 })
+    .withMessage('Feedback must be between 10 and 500 characters'),
   validate
 ];
 
 // Profile update validation
-const validateProfileUpdate = [
+export const validateProfileUpdate = [
   body('name')
     .optional()
     .trim()
@@ -116,7 +141,7 @@ const validateProfileUpdate = [
 ];
 
 // Message validation
-const validateMessage = [
+export const validateMessage = [
   body('title')
     .trim()
     .isLength({ min: 2, max: 100 })
@@ -133,7 +158,7 @@ const validateMessage = [
 ];
 
 // Admin validation
-const validateAdminAction = [
+export const validateAdminAction = [
   body('reason')
     .optional()
     .trim()
@@ -141,15 +166,3 @@ const validateAdminAction = [
     .withMessage('Reason must be between 5 and 200 characters'),
   validate
 ];
-
-module.exports = {
-  validate,
-  validateUserRegistration,
-  validateUserLogin,
-  validateSkill,
-  validateRequest,
-  validateRating,
-  validateProfileUpdate,
-  validateMessage,
-  validateAdminAction
-};

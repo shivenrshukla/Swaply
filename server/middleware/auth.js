@@ -1,5 +1,8 @@
-const jwt = require('jsonwebtoken');
-const User = require('../models/User');
+import jwt from 'jsonwebtoken';
+import User from '../models/User.js';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const auth = async (req, res, next) => {
   try {
@@ -31,7 +34,6 @@ const auth = async (req, res, next) => {
     req.user = user;
     req.user.id = user._id.toString();
 
-
     next();
   } catch (error) {
     console.error('Auth middleware error:', error.message);
@@ -39,4 +41,4 @@ const auth = async (req, res, next) => {
   }
 };
 
-module.exports = auth;
+export default auth;

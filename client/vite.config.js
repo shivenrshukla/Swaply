@@ -5,11 +5,11 @@ import tailwindcss from '@tailwindcss/vite'
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss(),],
-  // FIX: Add server proxy to forward API requests to the backend
+  // Server proxy to forward API requests to the backend
   server: {
     proxy: {
       '/api': {
-        target: 'https://skillswap-production-75d5.up.railway.app/',
+        target: 'http://localhost:8001',
         changeOrigin: true,
         secure: false
       }

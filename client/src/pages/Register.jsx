@@ -1,13 +1,14 @@
 // src/pages/Register.jsx
 import { useState } from 'react'
-// import { useNavigate } from 'react-router-dom' // Remove this import
 import axios from 'axios'
 import { useAuth } from '../context/AuthContext'
+import { useNavigation } from '../context/NavigationContext'
 
-// Accept onPageChange as a prop
-const Register = ({ onPageChange }) => { //
-  // const navigate = useNavigate() // Remove this line
+const Register = () => {
   const { login } = useAuth()
+  const { navigate } = useNavigation()
+
+  const API_URL = import.meta.env.VITE_API_BASE_URL.replace(/\/$/, '')
 
   const [form, setForm] = useState({
     name: '',
@@ -16,7 +17,7 @@ const Register = ({ onPageChange }) => { //
     location: '',
   })
 
-  const [error, setError] = useState(null)
+  const [error, setError] = useState(null)  // string or array of strings
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value })
@@ -27,18 +28,21 @@ const Register = ({ onPageChange }) => { //
     setError(null)
 
     try {
-      const res = await axios.post('/api/auth/register', form)
+      const res = await axios.post(`${API_URL}/api/auth/register`, form)
 
-      login(res.data.user)
+      // ✅ Set user and token in context (login handles localStorage too)
+      login(res.data.user, res.data.token)
 
-      if (res.data.token) {
-        localStorage.setItem('token', res.data.token)
-      }
-
-      onPageChange('home') // Navigate to 'home' after successful registration using onPageChange
+      navigate('home')
     } catch (err) {
       console.error("Registration error:", err.response || err)
-      setError(err.response?.data?.message || 'Registration failed.')
+      // Show individual validation messages if available, else fallback
+      const data = err.response?.data
+      if (data?.errors?.length) {
+        setError(data.errors.map(e => e.msg).join(' · '))
+      } else {
+        setError(data?.message || 'Registration failed.')
+      }
     }
   }
 
@@ -110,7 +114,7 @@ const Register = ({ onPageChange }) => { //
           Already have an account?{' '}
           {/* Change to a button and use onPageChange */}
           <button
-            onClick={() => onPageChange('login')} //
+            onClick={() => navigate('login')}
             className="text-cyan-400 underline hover:text-cyan-500 transition"
           >
             Login

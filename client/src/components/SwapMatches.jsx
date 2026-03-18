@@ -9,13 +9,12 @@ import { useNavigation } from '../context/NavigationContext';
 const SwapMatches = () => {
   const { user } = useAuth();
   const [matches, setMatches] = useState([]);
-  const {currentPage, setCurrentPage} = useNavigation();
+  const { navigate } = useNavigation();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [filter, setFilter] = useState('all');
   const [actionLoading, setActionLoading] = useState({});
   const [debugInfo, setDebugInfo] = useState(null);
-  const { navigate } = useNavigation();
 
   // const handleOpenChat = (matchId) => {
   //   navigate('chat', { matchId });
