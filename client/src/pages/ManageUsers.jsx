@@ -67,6 +67,22 @@ const ManageUsers = () => {
     }
   };
 
+  const handleDeleteUser = async (userId) => {
+    if (userId === currentUser?._id) {
+      alert("You cannot delete yourself.");
+      return;
+    }
+    if (window.confirm('Are you sure you want to delete this user permanently? This action cannot be undone.')) {
+      try {
+        await adminService.deleteUser(userId);
+        fetchUsers();
+      } catch (error) {
+        console.error("Failed to delete user:", error);
+        alert("Could not delete user.");
+      }
+    }
+  };
+
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= totalPages) {
       setPage(newPage);
