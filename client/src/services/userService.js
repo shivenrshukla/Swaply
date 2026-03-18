@@ -2,10 +2,24 @@
 import api from './api';
 
 const getAllUsers = async () => {
-    // Interceptor in api.js handles Authorization header
-    return api.get('/api/users')
+    return api.get('/api/users');
+};
+
+const getUserById = async (id) => {
+    return api.get(`/api/users/${id}`);
+};
+
+const getUserProfile = async () => {
+    return api.get('/api/users/profile');
+};
+
+const searchUsers = async (query) => {
+    return api.get(`/api/users/search?q=${query}`);
 };
 
 export default {
-    getAllUsers
+    getAllUsers,
+    getUserById,
+    getUserProfile,
+    searchUsers
 };
